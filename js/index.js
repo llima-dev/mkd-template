@@ -1,313 +1,7 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Gerador de Template GitLab</title>
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    .form-check-label {
-        cursor: pointer;
-    }
-    .list-group-item:hover {
-        background-color: #e9ecef;
-        box-shadow: inset 0 0 5px #ccc;
-    }
-    #listaPassos .list-group-item:hover {
-        background-color: #e0f7fa; /* azul claro */
-    }
 
-    #listaCriterios .list-group-item:hover {
-        background-color: #fff3cd; /* amarelinho claro */
-    }
+    let currentTemplateId = null;
+    let nomeTarefa = '';
 
-    hr.section-divider {
-        border-top: 3px solid #000000;
-        margin: 2rem 0;
-        box-shadow: inset 0 1px 0 rgb(23, 27, 41);
-    }
-
-    .generate-shortcut:hover small {
-        color: #f8f9fa !important;
-    }
-
-    .toolbar-custom {
-        border: 1px solid #dee2e6;
-        background-color: #f8f9fa;
-        margin-bottom: 1rem;
-    }
-
-    .toolbar-custom .btn {
-        min-width: 200px;
-        text-align: left;
-    }
-
-    button.btn-outline-secondary {
-        border: aliceblue !important;
-    }
-    .input-group {
-        position: relative;
-    }
-    .sug-autocomplete {
-  position: absolute;
-  background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-  z-index: 9999;
-  display: none;
-  width: auto;
-  min-width: 100px;
-  max-width: 400px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 0;
-  max-height: 200px;
-}
-
-.sug-autocomplete .list-group-item {
-  font-weight: 500;
-  padding: 10px 15px;
-  cursor: pointer;
-  border: none;
-  white-space: nowrap;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  background-color: #f8f9fa;
-  transition: background-color 0.15s ease-in-out;
-}
-
-.sug-autocomplete .list-group-item:hover {
-  background-color: #193764 !important;
-  color: white !important;
-  font-weight: bold;
-}
-
-
-    </style>
-</head>
-
-<body class="bg-dark text-light">
-  <div class="container py-3 mb-0">
-    <div class="card mx-auto shadow" style="max-width: 800px; border-radius: 12px;">
-      <div class="card-body bg-white text-dark p-4 rounded">
-          <div class="container py-3">
-    <h2 id="tituloPrincipal" class="mb-4"><i class="fas fa-tools"></i> Gerador de Template GitLab</h2>
-
-    <button class="btn btn-outline-secondary btn-sm me-2 my-2" data-bs-toggle="modal" data-bs-target="#modalImportar">
-        <i class="fas fa-upload"></i> Importar template
-    </button>
-
-    <div class="modal fade" id="modalImportar" tabindex="-1" aria-labelledby="modalImportarLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content text-dark">
-        <div class="modal-header">
-            <h5 class="modal-title" id="modalImportarLabel">
-            <i class="fas fa-file-import me-2"></i>Importar Template GitLab
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-        <div class="modal-body">
-            <label for="arquivoJson" class="form-label">Selecionar arquivo .json</label>
-            <input type="file" id="arquivoJson" accept=".json" class="form-control">
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button class="btn btn-success" onclick="importarArquivoJson()">Importar agora</button>
-        </div>
-        </div>
-    </div>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">
-            <i class="fas fa-circle"></i>
-        Escopo:
-        </label>
-      <input type="text" class="form-control" id="escopo" placeholder="Descrever o que foi feito">
-    </div>
-
-    <hr class="section-divider">
-
-    <div class="mb-1 d-flex align-items-center">
-        <i class="fas fa-toolbox me-2 text-secondary"></i>
-        <h5 class="mb-0 fw-bold">Preparativos</h5>
-    </div>
-
-    <div class="mb-3">
-    <button class="btn btn-outline-secondary btn-sm" onclick="adicionarPreparativo()">
-        <i class="fas fa-plus"></i> Adicionar Preparativo
-    </button>
-    </div>
-
-    <div id="containerPreparativos"></div>
-
-    <hr class="section-divider">
-
-    <div class="mb-2">
-        <label class="form-label" for="novoPasso">
-            <i class="fas fa-shoe-prints"></i> Passo de teste:
-        </label>
-        <div class="input-group">
-            <input type="text" id="novoPasso" class="form-control" placeholder="Digite um passo e pressione Enter">
-            <button class="btn btn-outline-success" type="button" onclick="adicionarPasso()">
-                <i class="fas fa-plus"></i>
-            </button>
-        </div>
-        <div id="sugestoesPasso" class="list-group position-absolute z-3 sug-autocomplete" style="display: none;"></div>
-    </div>
-
-    <ul class="list-group mb-4" id="listaPassos"></ul>
-
-    <hr class="section-divider">
-
-    <div class="mb-3">
-        <label class="form-label"><i class="fas fa-exclamation-triangle"></i> Critérios de Aceitação:</label>
-            <div class="input-group mb-2">
-                <input type="text" id="novoCriterio" class="form-control" placeholder="Descreva o critério e pressione Enter">
-                <button class="btn btn-outline-secondary" type="button" onclick="adicionarCriterio()">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-        <ul class="list-group" id="listaCriterios"></ul>
-    </div>
-
-    <hr class="section-divider">
-
-    <div class="mb-4">
-        <label class="form-label">
-            <i class="fas fa-flag"></i> Impacto:
-        </label>
-      <textarea class="form-control" id="impacto" rows="3" placeholder="1. Impacta tal módulo..."></textarea>
-    </div>
-
-    <hr class="section-divider">
-
-    <div class="mb-3">
-      <label class="form-label"><i class="fas fa-globe"></i> Navegadores testados:</label>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="chrome">
-        <label class="form-check-label" for="chrome">Google Chrome</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="edge">
-        <label class="form-check-label" for="edge">Microsoft Edge</label>
-      </div>
-    </div>
-
-    <hr class="section-divider">
-
-    <div class="mb-4">
-      <label class="form-label"><i class="fas fa-save"></i> Bancos de dados testados:</label>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="sqlserver">
-        <label class="form-check-label" for="sqlserver">SQL Server (ISO 8859-1)</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="oracleIso">
-        <label class="form-check-label" for="oracleIso">Oracle (ISO 8859-1)</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="postgres">
-        <label class="form-check-label" for="postgres">PostGreSQL (UTF8)</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="oracleUtf">
-        <label class="form-check-label" for="oracleUtf">Oracle (UTF8)</label>
-      </div>
-    </div>
-
-    <hr class="section-divider">
-
-    <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap bg-light p-3 rounded shadow-sm toolbar-custom">
-    <button class="btn btn-secondary btn-sm flex-fill" onclick="gerar()">
-        <i class="fa-solid fa-gears me-1"></i> Gerar Markdown
-        <small class="text-white-50 ms-1">(Alt + Enter)</small>
-    </button>
-
-    <button class="btn btn-outline-secondary btn-sm flex-fill" data-bs-toggle="modal" data-bs-target="#modalExportar">
-        <i class="fas fa-download me-1"></i> Exportar template
-    </button>
-
-    <button class="btn btn-outline-danger btn-sm flex-fill" onclick="limparDraft()">
-        <i class="fas fa-broom me-1"></i> Limpar rascunho
-    </button>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center">
-        <h5>
-            <i class="fas fa-clipboard"></i>
-            Resultado:
-        </h5>
-        <button id="copy_btn" disabled="true" class="btn btn-outline-secondary btn-sm my-2" onclick="copiarResultado()">
-            <i class="fas fa-copy"></i> Copiar
-        </button>
-    </div>
-    <textarea class="form-control" id="resultado" rows="25" readonly></textarea>
-  </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalExportar" tabindex="-1" aria-labelledby="modalExportarLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content text-dark">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalExportarLabel">
-          <i class="fas fa-file-export me-2"></i>Exportar Template GitLab
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body">
-        <label for="nomeExportar" class="form-label">Nome do arquivo</label>
-        <input type="text" id="nomeExportar" class="form-control" placeholder="ex: plano-teste-2024">
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn btn-success" onclick="exportarJson()">Exportar agora</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-  <div class="modal fade text-dark" id="modalCriterios" tabindex="-1" aria-labelledby="modalCriteriosLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="modalCriteriosLabel">Gerenciar passo de teste</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-        <div class="modal-body">
-             <div class="mb-3">
-                <label for="editarTextoPasso" class="form-label">
-                    <i class="fa-solid fa-pencil"></i> Editar passo
-                </label>
-                <input type="text" id="editarTextoPasso" class="form-control">
-            </div>
-            <label for="editarTextoPasso" class="form-label">
-                <i class="fa-solid fa-link"></i> Vincular critério de aceitação
-            </label>
-            
-            <div id="listaCriteriosModal"></div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" onclick="confirmarVinculoCriterios()">Salvar</button>
-        </div>
-        </div>
-    </div>
-    </div>
-
-    <footer class="text-center mt-1 text-white" style="font-size: 0.9rem;">
-        Desenvolvido por <strong>Lindomar Lima - ACT</strong>
-    </footer>
-
-  <script>
     function escaparUnderscores(texto) {
       return texto.replace(/_/g, '\\_');
     }
@@ -358,106 +52,163 @@
         }
     }
 
-    function removerPassoPreparativo(prepIndex, passoIndex) {
-        preparativos[prepIndex].passos.splice(passoIndex, 1);
-        renderizarPreparativos();
-    }
+function removerPassoPreparativo(prepIndex, passoIndex) {
+    preparativos[prepIndex].passos.splice(passoIndex, 1);
+    renderizarPreparativos();
+}
 
-    function renderizarPreparativos() {
-        const container = document.getElementById('containerPreparativos');
-        container.innerHTML = '';
+function renderizarPreparativos() {
+    const container = document.getElementById('containerPreparativos');
+    container.innerHTML = '';
 
-        preparativos.forEach((prep, i) => {
-            const div = document.createElement('div');
-            div.className = 'card my-3';
+    const estados = carregarEstadoColapsaveis();
+    preparativos.forEach((prep, i) => {
+        const div = document.createElement('div');
+        div.className = 'card my-3';
 
-            div.innerHTML = `
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <input type="text" class="form-control form-control-sm me-2" placeholder="Título do preparativo"
-                    value="${prep.titulo}" onchange="preparativos[${i}].titulo = this.value">
-                <button class="btn btn-sm btn-outline-danger" onclick="removerPreparativo(${i})">
-                <i class="fas fa-trash"></i>
+        div.innerHTML = `
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center flex-grow-1 gap-2">
+                <button class="btn btn-delete-light btn-sm prep-header-btn" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#prepCollapse${i}" 
+                        aria-expanded="true" 
+                        aria-controls="prepCollapse${i}">
+                    <i class="fas fa-caret-down rotate-icon" id="caretIcon${i}"></i>
                 </button>
+                <input type="text" class="form-control form-control-sm" placeholder="Título do preparativo"
+                    value="${prep.titulo}" onchange="preparativos[${i}].titulo = this.value">
             </div>
+            <button class="btn btn-sm btn-outline-danger ms-2 btn-delete-prep" onclick="removerPreparativo(${i})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+
+        <div id="prepCollapse${i}" class="collapse ${estados[i] !== false ? 'show' : ''}">
             <div class="card-body">
                 <div class="input-group mb-2 position-relative">
-                <input type="text" class="form-control" placeholder="Novo passo" id="prepPassoInput${i}"
-                    oninput="inputPreparativoHandler(event, ${i})"
-                    onblur="setTimeout(esconderSugestoes, 150)"
-                    onkeypress="if(event.key==='Enter'){event.preventDefault(); adicionarPassoPreparativo(${i})}">
-                <button class="btn btn-outline-success" onclick="adicionarPassoPreparativo(${i})">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <div class="list-group position-absolute z-3 sug-autocomplete" id="prepSugestoes${i}" style="display: none;"></div>
+                    <input type="text" class="form-control" placeholder="Novo passo" id="prepPassoInput${i}"
+                        oninput="inputPreparativoHandler(event, ${i})"
+                        onblur="setTimeout(esconderSugestoes, 150)"
+                        onkeypress="if(event.key==='Enter'){event.preventDefault(); adicionarPassoPreparativo(${i})}">
+                    <button class="btn btn-outline-success" onclick="adicionarPassoPreparativo(${i})">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <div class="list-group position-absolute z-3 sug-autocomplete" id="prepSugestoes${i}" style="display: none;"></div>
                 </div>
                 <ul class="list-group">
-                ${prep.passos.map((p, j) => `
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="editable" onclick="editarPassoPreparativo(${i}, ${j}, this)">${j + 1}. ${p}</span>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="removerPassoPreparativo(${i}, ${j})">
-                        <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </li>
-                `).join('')}
+                    ${prep.passos.map((p, j) => `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="editable" onclick="editarPassoPreparativo(${i}, ${j}, this)">${j + 1}. ${p}</span>
+                            <button class="btn btn-sm btn-delete-light" onclick="removerPassoPreparativo(${i}, ${j})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </li>
+                    `).join('')}
                 </ul>
             </div>
-            `;
+        </div>
+        `;
 
-            setTimeout(() => {
-                document.getElementById('prepPassoInput' + i)?.addEventListener('input', function (e) {
+        // Event listeners para sugestões e atalhos
+        setTimeout(() => {
+            const input = document.getElementById('prepPassoInput' + i);
+            if (input) {
+                input.addEventListener('input', function (e) {
                     aplicarSubstituicoesSeta(e.target);
-                });
-            }, 0);
-
-                    setTimeout(() => {
-                    const input = document.getElementById('prepPassoInput' + i);
-                    if (input) {
-                        input.addEventListener('input', function (e) {
-                        aplicarSubstituicoesSeta(e.target);
-
-                        const valor = e.target.value;
-                        const indexParenteses = valor.lastIndexOf('(');
-                        if (indexParenteses !== -1) {
-                            mostrarSugestoes(valor.slice(indexParenteses + 1).toLowerCase(), input, `prepSugestoes${i}`);
-                        } else {
-                            esconderSugestoes();
-                        }
-                        });
-
-                        input.addEventListener('blur', esconderSugestoes);
+                    atualizarSugestoesPorParenteses(e.target, `prepSugestoes${i}`);
+                    if (e.target.value.trim() === '/') {
+                        mostrarModalBlocos(i);
                     }
-                    }, 0);
+                });
 
-            container.appendChild(div);
-        });
-    }
-
-    function editarPassoPreparativo(prepIndex, passoIndex, spanEl) {
-        const textoOriginal = preparativos[prepIndex].passos[passoIndex];
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = textoOriginal;
-        input.className = 'form-control form-control-sm';
-        input.style.flex = '1';
-        input.onblur = salvarEdicao;
-        input.onkeypress = function (e) {
-            if (e.key === 'Enter') {
-            e.preventDefault();
-            salvarEdicao();
+                input.addEventListener('blur', () =>
+                    setTimeout(() => esconderSugestoes(`prepSugestoes${i}`), 150)
+                );
             }
-        };
+        }, 0);
 
-        function salvarEdicao() {
-            const novoValor = input.value.trim();
-            if (novoValor !== '') {
-            preparativos[prepIndex].passos[passoIndex] = novoValor;
-            renderizarPreparativos();
-            }
-        }
+        container.appendChild(div);
 
-        spanEl.replaceWith(input);
-        input.focus();
+        setTimeout(() => {
+            const collapseEl = document.getElementById(`prepCollapse${i}`);
+            const caret = document.getElementById(`caretIcon${i}`);
+            
+            const updateCaret = () => {
+              if (collapseEl.classList.contains('show')) {
+                caret.classList.remove('collapsed');
+              } else {
+                caret.classList.add('collapsed');
+              }
+            };
+          
+            collapseEl.addEventListener('shown.bs.collapse', () => {
+              updateCaret();
+              salvarEstadoColapsaveis();
+            });
+          
+            collapseEl.addEventListener('hidden.bs.collapse', () => {
+              updateCaret();
+              salvarEstadoColapsaveis();
+            });
+          
+            // Atualiza já na renderização
+            updateCaret();
+          }, 0);          
+    });
+}
+
+function editarPassoPreparativo(prepIndex, passoIndex, spanEl) {
+  const textoOriginal = preparativos[prepIndex].passos[passoIndex];
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = textoOriginal;
+  input.className = "form-control form-control-sm";
+  input.style.flex = "1";
+
+  const sugId = `prepSugestoesEdicao${prepIndex}_${passoIndex}`;
+
+  // Criar o container de sugestões
+  const sugContainer = document.createElement("div");
+  sugContainer.className = "list-group position-absolute z-3 sug-autocomplete";
+  sugContainer.id = sugId;
+  sugContainer.style.display = "none";
+
+  // Encaixar container na hierarquia
+  setTimeout(() => {
+    input.parentElement?.appendChild(sugContainer);
+  }, 0);
+
+  input.oninput = function (e) {
+    aplicarSubstituicoesSeta(e.target);
+    atualizarSugestoesPorParenteses(e.target, sugId);
+  };
+
+  input.onblur = function () {
+    setTimeout(() => {
+      esconderSugestoes(sugId);
+      salvarEdicao();
+    }, 150);
+  };
+
+  input.onkeypress = function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      salvarEdicao();
     }
+  };
+
+  function salvarEdicao() {
+    const novoValor = input.value.trim();
+    if (novoValor !== "") {
+      preparativos[prepIndex].passos[passoIndex] = novoValor;
+      renderizarPreparativos();
+    }
+  }
+
+  spanEl.replaceWith(input);
+  input.focus();
+}  
 
     function renderizarPassos() {
         const lista = document.getElementById('listaPassos');
@@ -482,7 +233,7 @@
             <span>
                 ${escaparUnderscores((index + 1) + '. ' + passo.texto)}${criteriosBadge}
             </span>
-            <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); removerPasso(${index})">
+            <button class="btn btn-sm btn-delete-light" onclick="event.stopPropagation(); removerPasso(${index})">
                 <i class="fas fa-trash-alt"></i>
             </button>
             `;
@@ -526,7 +277,7 @@
         li.className = 'list-group-item d-flex justify-content-between align-items-center';
         li.innerHTML = `
         <span>${escaparUnderscores((index + 1) + '. ' + criterio)}</span>
-        <button class="btn btn-sm btn-outline-secondary" onclick="removerCriterio(${index})">
+        <button class="btn btn-sm btn-delete-light" onclick="removerCriterio(${index})">
             <i class="fas fa-trash-alt"></i>
         </button>
         `;
@@ -642,44 +393,80 @@ ${postgres}${oracleUtf}
     });
 }
 
-
-  </script>
-
-  <script>
+  
   let passoSelecionadoIndex = null;
 
   function selecionarCriterios(index) {
-  passoSelecionadoIndex = index;
-  const container = document.getElementById('listaCriteriosModal');
-  document.getElementById('editarTextoPasso').value = passos[index].texto;
+    passoSelecionadoIndex = index;
+    const container = document.getElementById("listaCriteriosModal");
+    const input = document.getElementById("editarTextoPasso");
+    input.value = passos[index].texto;
 
-  // Limpa conteúdo anterior
-  container.innerHTML = '';
+    // Limpa conteúdo anterior
+    container.innerHTML = "";
 
-  if (!criterios.length) {
-    container.innerHTML = '<p class="text-muted">Nenhum critério foi adicionado ainda.</p>';
-  } else {
-    criterios.forEach((criterio, i) => {
-      const checkbox = document.createElement('div');
-      checkbox.className = 'form-check';
+    if (!criterios.length) {
+      container.innerHTML =
+        '<p class="text-muted">Nenhum critério foi adicionado ainda.</p>';
+    } else {
+      criterios.forEach((criterio, i) => {
+        const checkbox = document.createElement("div");
+        checkbox.className = "form-check";
 
-      const isChecked = passos[index].criteriosVinculados.includes(i);
+        const isChecked = passos[index].criteriosVinculados.includes(i);
 
-      checkbox.innerHTML = `
-        <input class="form-check-input" type="checkbox" value="${i}" id="criterioCheck${i}" ${isChecked ? 'checked' : ''}>
-        <label class="form-check-label" for="criterioCheck${i}">
-          ${i + 1}. ${escaparUnderscores(criterio)}
-        </label>
-      `;
+        checkbox.innerHTML = `
+          <input class="form-check-input" type="checkbox" value="${i}" id="criterioCheck${i}" ${
+          isChecked ? "checked" : ""
+        }>
+          <label class="form-check-label" for="criterioCheck${i}">
+            ${i + 1}. ${escaparUnderscores(criterio)}
+          </label>
+        `;
 
-      container.appendChild(checkbox);
+        container.appendChild(checkbox);
+      });
+    }
+
+    // Remover eventos antigos pra evitar duplicação
+    input.replaceWith(input.cloneNode(true));
+    const newInput = document.getElementById("editarTextoPasso");
+
+    // ID do container de sugestões
+    const sugId = "sugestoesEdicaoModal";
+
+    // Criar container se não existir
+    let sugContainer = document.getElementById(sugId);
+    if (!sugContainer) {
+      sugContainer = document.createElement("div");
+      sugContainer.className =
+        "list-group position-absolute z-3 sug-autocomplete";
+      sugContainer.id = sugId;
+      sugContainer.style.display = "none";
+
+      newInput.parentElement?.classList.add("position-relative");
+      newInput.parentElement?.appendChild(sugContainer);
+    }
+
+    // Substituir '>' e ativar autocomplete com '('
+    newInput.addEventListener("input", function (e) {
+      aplicarSubstituicoesSeta(e.target);
+      atualizarSugestoesPorParenteses(e.target, sugId);
     });
-  }
 
-  const modal = new bootstrap.Modal(document.getElementById('modalCriterios'));
-  modal.show();
-}
+    newInput.addEventListener("blur", function () {
+      setTimeout(() => esconderSugestoes(sugId), 150);
+    });
 
+    // Modal ON
+    const modal = new bootstrap.Modal(
+      document.getElementById("modalCriterios")
+    );
+    modal.show();
+
+    // (Opcional) Selecionar texto ao abrir
+    setTimeout(() => newInput.select(), 100);
+  }  
 
   function confirmarVinculoCriterios() {
     const checkboxes = document.querySelectorAll('#listaCriteriosModal input[type=checkbox]');
@@ -727,31 +514,51 @@ ${postgres}${oracleUtf}
 }
 
 window.addEventListener('beforeunload', () => {
+  const id = currentTemplateId || gerarIdTemplate();
+  currentTemplateId = id;
+
+  nomeTarefa = document.getElementById('nomeTarefa').value.trim();
+
   const draft = {
-        escopo: document.getElementById('escopo').value,
-        impacto: document.getElementById('impacto').value,
-        criterios,
-        passos,
-        preparativos, // <-- Adicione aqui
-        navegadores: {
-            chrome: document.getElementById('chrome').checked,
-            edge: document.getElementById('edge').checked
-        },
-        bancos: {
-            sqlserver: document.getElementById('sqlserver').checked,
-            oracleIso: document.getElementById('oracleIso').checked,
-            postgres: document.getElementById('postgres').checked,
-            oracleUtf: document.getElementById('oracleUtf').checked
-        }
+    templateId: id,
+    nomeTarefa,
+    escopo: document.getElementById('escopo').value,
+    impacto: document.getElementById('impacto').value,
+    criterios,
+    passos,
+    preparativos,
+    navegadores: {
+      chrome: document.getElementById('chrome').checked,
+      edge: document.getElementById('edge').checked
+    },
+    bancos: {
+      sqlserver: document.getElementById('sqlserver').checked,
+      oracleIso: document.getElementById('oracleIso').checked,
+      postgres: document.getElementById('postgres').checked,
+      oracleUtf: document.getElementById('oracleUtf').checked
+    }
   };
 
-  localStorage.setItem('gitlab_template_draft', JSON.stringify(draft));
+  localStorage.setItem('template_gitlab_draft', JSON.stringify(draft));
 });
 
 window.addEventListener('DOMContentLoaded', () => {
-  const draft = localStorage.getItem('gitlab_template_draft');
-  if (draft) {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('template_gitlab_'));
+  
+  if (keys.length > 0) {
+    const draft = localStorage.getItem('template_gitlab_draft');
     const data = JSON.parse(draft);
+    currentTemplateId = data.templateId || keys[0].replace('template_gitlab_', '');
+
+    document.getElementById('nomeTarefa').value = data.nomeTarefa || '';
+    nomeTarefa = data.nomeTarefa || 'Gerador de Template GitLab';
+
+    document.getElementById('tituloPrincipal').innerHTML = `
+    <i class="fas fa-tools"></i> Gerador de Template GitLab 
+    ${nomeTarefa ? `<small class="text-muted">(${nomeTarefa})</small>` : ''}
+    `;
+
+    document.title = nomeTarefa + '-template' || 'Gerador de Template GitLab';
 
     // Restaurar campos simples
     document.getElementById('escopo').value = data.escopo || '';
@@ -767,17 +574,29 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('postgres').checked = data.bancos?.postgres || false;
     document.getElementById('oracleUtf').checked = data.bancos?.oracleUtf || false;
 
-    // Restaurar critérios
+    // Restaurar critérios e passos
     criterios = data.criterios || [];
-    renderizarCriterios();
-
-    // Restaurar passos
     passos = data.passos || [];
-    renderizarPassos();
-
     preparativos = data.preparativos || [];
+
+    renderizarCriterios();
+    renderizarPassos();
     renderizarPreparativos();
+
+    // Atualiza visual
+    document.getElementById('nomeExportar').value = nomeTarefa;
   }
+});
+
+document.getElementById('nomeTarefa').addEventListener('input', (e) => {
+  const valor = e.target.value.trim();
+  nomeTarefa = valor;
+  document.title = valor + '-template' || 'Gerador de Template GitLab';
+  
+  document.getElementById('tituloPrincipal').innerHTML = `
+    <i class="fas fa-tools"></i> Gerador de Template GitLab 
+    ${valor ? `<small class="text-muted">(${valor})</small>` : ''}
+  `;
 });
 
 document.addEventListener('keydown', function (e) {
@@ -797,10 +616,11 @@ function limparDraft() {
     cancelButtonText: 'Cancelar'
   }).then((result) => {
     if (result.isConfirmed) {
-      // Limpa o localStorage
-      localStorage.removeItem('gitlab_template_draft');
+      const keyToDelete = currentTemplateId ? `template_gitlab_${currentTemplateId}` : 'gitlab_template_draft';
+      localStorage.removeItem(keyToDelete);  // <-- Aqui está o pulo do gato
 
       // Limpa os campos de texto
+      document.getElementById('nomeTarefa').value = '';
       document.getElementById('escopo').value = '';
       document.getElementById('impacto').value = '';
       document.getElementById('novoPasso').value = '';
@@ -818,10 +638,19 @@ function limparDraft() {
       // Limpa arrays e re-renderiza
       passos = [];
       criterios = [];
+      preparativos = [];
       renderizarPassos();
       renderizarCriterios();
+      renderizarPreparativos();
 
-      // Feedback de sucesso
+      // Zera id e título
+      currentTemplateId = null;
+      nomeTarefa = '';
+      document.title = 'Gerador de Template GitLab';
+      document.getElementById('tituloPrincipal').innerHTML = `
+        <i class="fas fa-tools"></i> Gerador de Template GitLab
+      `;
+
       Swal.fire({
         icon: 'success',
         title: 'Rascunho apagado!',
@@ -833,27 +662,19 @@ function limparDraft() {
   });
 }
 
-const sugestoesAutoComplete = [
-  'Categoria (PL020)',
-  'Ações e planos (PL001)',
-  'Tarefas (PL026)',
-  'Atributo (PL012)',
-  'Parâmetros gerais (PL021)'
-];
-
 function mostrarSugestoes(filtroParcial, inputRef, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
-  container.innerHTML = '';
+    container.innerHTML = '';
 
-  const sugestoesFiltradas = sugestoesAutoComplete.filter(s =>
-    s.toLowerCase().includes(filtroParcial)
-  );
+    const sugestoesFiltradas = sugestoesAutoComplete.filter(s =>
+        s.id.toLowerCase().startsWith(filtroParcial.toLowerCase())
+    );
 
-  if (!sugestoesFiltradas.length) {
-    container.style.display = 'none';
-    return;
-  }
+    if (!sugestoesFiltradas.length) {
+        container.style.display = 'none';
+        return;
+    }
 
   sugestoesFiltradas.forEach(sugestao => {
     const item = document.createElement('button');
@@ -866,7 +687,7 @@ function mostrarSugestoes(filtroParcial, inputRef, containerId) {
       e.preventDefault();
       const textoAtual = inputRef.value;
       const inicioParenteses = textoAtual.lastIndexOf('(');
-      inputRef.value = textoAtual.slice(0, inicioParenteses) + sugestao + ' ';
+      inputRef.value = textoAtual.slice(0, inicioParenteses) + `${sugestao.name} (${sugestao.id}) `;
       container.style.display = 'none';
       inputRef.focus();
     });
@@ -947,7 +768,11 @@ function exportarJson() {
         }
   };
 
-  const nome = document.getElementById('nomeExportar').value.trim() || 'template_gitlab';
+  data.templateId = currentTemplateId || gerarIdTemplate();
+  data.nomeTarefa = document.getElementById('nomeTarefa').value.trim();
+
+  const nome = document.getElementById('nomeExportar').value.trim() || 
+             (nomeTarefa ? nomeTarefa.replace(/\s+/g, '-').toLowerCase() : 'template_gitlab');
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -967,6 +792,10 @@ function exportarJson() {
   });
 }
 
+function gerarIdTemplate() {
+  return 'tpl-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
+}
+
 function importarArquivoJson() {
   const fileInput = document.getElementById('arquivoJson');
   const file = fileInput.files[0];
@@ -980,6 +809,18 @@ function importarArquivoJson() {
   reader.onload = function (event) {
     try {
       const data = JSON.parse(event.target.result);
+
+      currentTemplateId = data.templateId || gerarIdTemplate();
+
+        nomeTarefa = data.nomeTarefa || '';
+        document.getElementById('nomeTarefa').value = nomeTarefa;
+
+        // Atualiza título
+        document.getElementById('tituloPrincipal').innerHTML = `
+        <i class="fas fa-tools"></i> Gerador de Template GitLab 
+        ${nomeTarefa ? `<small class="text-muted">(${nomeTarefa})</small>` : ''}
+        `;
+        document.title = nomeTarefa + '-template' || 'Gerador de Template GitLab';
 
       // Aplica os dados no formulário
       document.getElementById('escopo').value = data.escopo || '';
@@ -1018,13 +859,15 @@ function importarArquivoJson() {
 
   reader.readAsText(file);
 
-    const nomeArquivo = file.name.replace('.json', '');
+    const nomeArquivo =
+    data.nomeTarefa?.trim() ||
+    file.name.replace('.json', '') ||
+    'template_gitlab';
+
     document.getElementById('nomeExportar').value = nomeArquivo;
 
     const titulo = document.getElementById('tituloPrincipal').innerHTML =
   `<i class="fas fa-tools"></i> Gerador de Template GitLab <small class="text-muted">(${nomeArquivo})</small>`;
-
-    document.getElementById('nomeExportar').value = nomeArquivo;
 }
 
 function aplicarSubstituicoesSeta(elemento) {
@@ -1052,9 +895,140 @@ document.getElementById('novoPasso').addEventListener('input', function (e) {
 
 document.getElementById('novoPasso').addEventListener('blur', () => setTimeout(() => esconderSugestoes('sugestoesPasso'), 150));
 
-</script>
+let blocosDePassos = [];
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+if (typeof window.getBlocosDePassos === 'function') {
+    blocosDePassos = window.getBlocosDePassos();
+}
 
-</body>
-</html>
+document.getElementById('novoPasso').addEventListener('input', function (e) {
+  const valor = e.target.value;
+  if (valor.trim() === '/') {
+    mostrarModalBlocos();
+  }
+});
+
+function mostrarModalBlocos(prepIndex = null) {
+  const modalBody = document.getElementById('modalBlocosBody');
+  modalBody.innerHTML = '';
+
+  blocosDePassos.forEach((bloco, index) => {
+    const btn = document.createElement('button');
+    btn.className = 'list-group-item list-group-item-action';
+    btn.textContent = bloco.titulo;
+    btn.onclick = () => aplicarBlocoDePassos(index, prepIndex);
+    modalBody.appendChild(btn);
+  });
+
+  const modalEl = document.getElementById('modalBlocos');
+  let modal = bootstrap.Modal.getInstance(modalEl);
+
+  if (!modal) {
+    modal = new bootstrap.Modal(modalEl);
+  }
+
+  modal.show();
+}
+
+function aplicarBlocoDePassos(blocoIndex, prepIndex = null) {
+  const bloco = blocosDePassos[blocoIndex];
+
+  if (prepIndex === null) {
+    // Insere nos passos principais
+    bloco.passos.forEach(p => {
+      passos.push({
+        texto: p.texto,
+        critico: false,
+        criteriosVinculados: []
+      });
+    });
+    renderizarPassos();
+  } else {
+    // Insere nos preparativos[prepIndex].passos
+    bloco.passos.forEach(p => {
+      preparativos[prepIndex].passos.push(p.texto);
+    });
+    renderizarPreparativos();
+  }
+
+  document.getElementById('novoPasso').value = '';
+  const modal = bootstrap.Modal.getInstance(document.getElementById('modalBlocos'));
+  modal.hide();
+}
+
+let sugestoesAutoComplete = [];
+if (typeof window.getSugestoesAutoComplete === 'function') {
+  sugestoesAutoComplete = window.getSugestoesAutoComplete();
+}
+
+function getPrefixosValidos() {
+  return [...new Set(sugestoesAutoComplete.map(s => s.id.match(/^[A-Z]+/)[0]))];
+}
+
+function atualizarSugestoesPorParenteses(inputEl, containerId) {
+  const texto = inputEl.value;
+  const indexParenteses = texto.lastIndexOf('(');
+
+  if (indexParenteses === -1) {
+    esconderSugestoes(containerId);
+    return;
+  }
+
+  const filtroParcial = texto.slice(indexParenteses + 1).toLowerCase();
+
+  const sugestoesFiltradas = sugestoesAutoComplete.filter(s =>
+    s.id.toLowerCase().startsWith(filtroParcial)
+  );
+
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    sugestoesFiltradas.forEach(s => {
+    const item = document.createElement('li');
+    item.className = 'list-group-item list-group-item-action';
+    item.textContent = `${s.name} (${s.id})`;
+    item.dataset.id = s.id;
+    item.dataset.name = s.name;
+
+    item.onclick = () => {
+        const textoAtual = inputEl.value;
+        const prefixo = textoAtual.slice(0, indexParenteses);
+        inputEl.value = prefixo + `${s.name} (${s.id}) `;
+        container.style.display = 'none';
+        inputEl.focus();
+    };
+
+    container.appendChild(item);
+    });
+    container.style.display = 'block';
+}
+
+document.getElementById('novoPasso').addEventListener('input', function (e) {
+  aplicarSubstituicoesSeta(e.target);
+  atualizarSugestoesPorParenteses(e.target, 'sugestoesPasso');
+
+  if (e.target.value.trim() === '/') {
+    mostrarModalBlocos();
+  }
+});
+
+document.getElementById('novoPasso').addEventListener('blur', () =>
+  setTimeout(() => esconderSugestoes('sugestoesPasso'), 150)
+);
+
+function salvarEstadoColapsaveis() {
+  const estados = preparativos.map((_, i) => {
+    const el = document.getElementById(`prepCollapse${i}`);
+    return el?.classList.contains("show");
+  });
+  localStorage.setItem("estadoPreparativos", JSON.stringify(estados));
+}
+
+function carregarEstadoColapsaveis() {
+  const raw = localStorage.getItem("estadoPreparativos");
+  try {
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+  
