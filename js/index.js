@@ -1,6 +1,7 @@
 
     let currentTemplateId = null;
     let nomeTarefa = '';
+    let blocosDeCodigo = [];
 
     function escaparUnderscores(texto) {
       return texto.replace(/_/g, '\\_');
@@ -100,8 +101,8 @@ function renderizarPreparativos() {
                     ${prep.passos.map((p, j) => `
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span class="editable" onclick="editarPassoPreparativo(${i}, ${j}, this)">${j + 1}. ${p}</span>
-                            <button class="btn btn-sm btn-delete-light" onclick="removerPassoPreparativo(${i}, ${j})">
-                                <i class="fas fa-trash-alt"></i>
+                            <button class="btn btn-sm btn-outline-danger btn-delete-prep" onclick="removerPassoPreparativo(${i}, ${j})">
+                                <small>Remover</small>
                             </button>
                         </li>
                     `).join('')}
@@ -233,8 +234,8 @@ function editarPassoPreparativo(prepIndex, passoIndex, spanEl) {
             <span>
                 ${escaparUnderscores((index + 1) + '. ' + passo.texto)}${criteriosBadge}
             </span>
-            <button class="btn btn-sm btn-delete-light" onclick="event.stopPropagation(); removerPasso(${index})">
-                <i class="fas fa-trash-alt"></i>
+            <button class="btn btn-outline-danger btn-delete-prep" onclick="event.stopPropagation(); removerPasso(${index})">
+                <i class="fas fa-trash"></i>
             </button>
             `;
 
@@ -277,8 +278,8 @@ function editarPassoPreparativo(prepIndex, passoIndex, spanEl) {
         li.className = 'list-group-item d-flex justify-content-between align-items-center';
         li.innerHTML = `
         <span>${escaparUnderscores((index + 1) + '. ' + criterio)}</span>
-        <button class="btn btn-sm btn-delete-light" onclick="removerCriterio(${index})">
-            <i class="fas fa-trash-alt"></i>
+        <button class="btn btn-sm btn-outline-danger btn-delete-prep" onclick="removerCriterio(${index})">
+            <i class="fas fa-trash"></i>
         </button>
         `;
         lista.appendChild(li);
@@ -351,25 +352,34 @@ const passosTexto = passos.map((p, i) => {
     let markdown = `### :star: Escopo \n\n 1. *${escopo}*
     `;
 
+    const blocosTexto = blocosDeCodigo.map((b) => {
+        const titulo = b.titulo ? `#####  ${b.titulo}\n` : '';
+        return `${titulo}\`\`\`${b.linguagem}\n${b.codigo}\n\`\`\``;
+      }).join('\n\n');
+
+    if (blocosTexto) {
+      markdown += `\n### :notebook: Código auxiliar\n${blocosTexto}\n`;
+    }
+
     if (preparativosTexto) {
         markdown += `\n____\n${preparativosTexto}\n`;
     }
 
 markdown += `
 ____
-### :mans\\_shoe: Passos
+### :mans_shoe: Passos
 ${passosTexto}
 
 ____
 ### :warning: Critério de aceitação
 ${criteriosTexto}
 ____
-### :triangular\\_flag\\_on\\_post: Impacto
+### :triangular_flag_on_post: Impacto
 ${impacto}
 ____
 ### :ship: Navegadores testados:
 ${chrome}${edge}____
-### :game\\_die: Bancos de dados testados:
+### :game_die: Bancos de dados testados:
 * **ISO 8859-1**:
 ${sqlserver}${oracleIso}* **UTF8**:
 ${postgres}${oracleUtf}
@@ -391,6 +401,8 @@ ${postgres}${oracleUtf}
         timer: 2000,
         timerProgressBar: true
     });
+
+    return document.getElementById('resultado').value;
 }
 
   
@@ -526,6 +538,7 @@ window.addEventListener('beforeunload', () => {
     impacto: document.getElementById('impacto').value,
     criterios,
     passos,
+    blocosDeCodigo,
     preparativos,
     navegadores: {
       chrome: document.getElementById('chrome').checked,
@@ -579,6 +592,9 @@ window.addEventListener('DOMContentLoaded', () => {
     passos = data.passos || [];
     preparativos = data.preparativos || [];
 
+    blocosDeCodigo = data.blocosDeCodigo || [];
+    
+    renderizarBlocosDeCodigo();
     renderizarCriterios();
     renderizarPassos();
     renderizarPreparativos();
@@ -608,59 +624,72 @@ document.addEventListener('keydown', function (e) {
 
 function limparDraft() {
   Swal.fire({
-    icon: 'question',
-    title: 'Apagar rascunho salvo?',
-    text: 'Todos os dados armazenados localmente serão perdidos.',
+    icon: "question",
+    title: "Apagar rascunho salvo?",
+    text: "Todos os dados armazenados localmente serão perdidos.",
     showCancelButton: true,
-    confirmButtonText: 'Sim, apagar',
-    cancelButtonText: 'Cancelar'
+    confirmButtonText: "Sim, apagar",
+    cancelButtonText: "Cancelar",
   }).then((result) => {
     if (result.isConfirmed) {
-      const keyToDelete = currentTemplateId ? `template_gitlab_${currentTemplateId}` : 'gitlab_template_draft';
-      localStorage.removeItem(keyToDelete);  // <-- Aqui está o pulo do gato
+      const keyToDelete = currentTemplateId
+        ? `template_gitlab_${currentTemplateId}`
+        : "gitlab_template_draft";
+      localStorage.removeItem(keyToDelete);
 
-      // Limpa os campos de texto
-      document.getElementById('nomeTarefa').value = '';
-      document.getElementById('escopo').value = '';
-      document.getElementById('impacto').value = '';
-      document.getElementById('novoPasso').value = '';
-      document.getElementById('novoCriterio').value = '';
-      document.getElementById('resultado').value = '';
+      // Campos de texto
+      document.getElementById("nomeTarefa").value = "";
+      document.getElementById("escopo").value = "";
+      document.getElementById("impacto").value = "";
+      document.getElementById("novoPasso").value = "";
+      document.getElementById("novoCriterio").value = "";
+      document.getElementById("resultado").value = "";
 
-      // Limpa checkboxes
-      document.getElementById('chrome').checked = false;
-      document.getElementById('edge').checked = false;
-      document.getElementById('sqlserver').checked = false;
-      document.getElementById('oracleIso').checked = false;
-      document.getElementById('postgres').checked = false;
-      document.getElementById('oracleUtf').checked = false;
+      // Campos do modal de código
+      document.getElementById("tituloCodigo").value = "";
+      document.getElementById("linguagemCodigo").value = "php";
+      document.getElementById("blocoCodigo").value = "";
 
-      // Limpa arrays e re-renderiza
+      // Checkboxes
+      document.getElementById("chrome").checked = false;
+      document.getElementById("edge").checked = false;
+      document.getElementById("sqlserver").checked = false;
+      document.getElementById("oracleIso").checked = false;
+      document.getElementById("postgres").checked = false;
+      document.getElementById("oracleUtf").checked = false;
+
+      // Arrays
       passos = [];
       criterios = [];
       preparativos = [];
+      blocosDeCodigo = [];
+      blocoEditandoIndex = null;
+
+      // Renderizações
       renderizarPassos();
       renderizarCriterios();
       renderizarPreparativos();
+      renderizarBlocosDeCodigo();
 
-      // Zera id e título
+      // Reset título e ID
       currentTemplateId = null;
-      nomeTarefa = '';
-      document.title = 'Gerador de Template GitLab';
-      document.getElementById('tituloPrincipal').innerHTML = `
-        <i class="fas fa-tools"></i> Gerador de Template GitLab
-      `;
+      nomeTarefa = "";
+      document.title = "Gerador de Template GitLab";
+      document.getElementById("tituloPrincipal").innerHTML = `
+          <i class="fas fa-tools"></i> Gerador de Template GitLab
+        `;
 
       Swal.fire({
-        icon: 'success',
-        title: 'Rascunho apagado!',
-        text: 'Agora está tudo limpo. 🧼',
+        icon: "success",
+        title: "Rascunho apagado!",
+        text: "Agora está tudo limpo. 🧼",
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
     }
   });
 }
+  
 
 function mostrarSugestoes(filtroParcial, inputRef, containerId) {
     const container = document.getElementById(containerId);
@@ -755,7 +784,8 @@ function exportarJson() {
         impacto: document.getElementById('impacto').value,
         criterios,
         passos,
-        preparativos, // <-- Aqui
+        blocosDeCodigo,
+        preparativos,
         navegadores: {
             chrome: document.getElementById('chrome').checked,
             edge: document.getElementById('edge').checked
@@ -828,7 +858,9 @@ function importarArquivoJson() {
       criterios = data.criterios || [];
       passos = data.passos || [];
       preparativos = data.preparativos || [];
-    
+      blocosDeCodigo = data.blocosDeCodigo || [];
+      
+      renderizarBlocosDeCodigo(); 
       renderizarPreparativos();
       renderizarCriterios();
       renderizarPassos();
@@ -1030,5 +1062,172 @@ function carregarEstadoColapsaveis() {
   } catch {
     return [];
   }
+}
+  
+function inserirBlocoDeCodigo() {
+  const titulo = document.getElementById("tituloCodigo").value.trim();
+  const linguagem = document.getElementById("linguagemCodigo").value;
+  const codigo = document.getElementById("blocoCodigo").value.trim();
+
+  if (!codigo) {
+    Swal.fire("Atenção!", "O bloco de código está vazio.", "warning");
+    return;
+  }
+
+  const bloco = { titulo, linguagem, codigo };
+
+  if (blocoEditandoIndex !== null) {
+    blocosDeCodigo[blocoEditandoIndex] = bloco;
+    blocoEditandoIndex = null;
+  } else {
+    blocosDeCodigo.push(bloco);
+  }
+
+  // Limpar campos
+  document.getElementById("tituloCodigo").value = "";
+  document.getElementById("linguagemCodigo").value = "php";
+  document.getElementById("blocoCodigo").value = "";
+
+  const modal = bootstrap.Modal.getInstance(
+    document.getElementById("modalCodigo")
+  );
+  modal.hide();
+
+  renderizarBlocosDeCodigo();
+
+  Swal.fire({
+    toast: true,
+    position: "top-end",
+    icon: "success",
+    title: "Código salvo!",
+    showConfirmButton: false,
+    timer: 2000,
+  });
+}  
+  
+function renderizarBlocosDeCodigo() {
+  const container = document.getElementById("containerBlocosCodigo");
+  container.innerHTML = "";
+
+  if (blocosDeCodigo.length === 0) return;
+
+  blocosDeCodigo.forEach((bloco, i) => {
+    const preview =
+      bloco.codigo.length > 60
+        ? bloco.codigo.substring(0, 60) + "..."
+        : bloco.codigo;
+
+    const card = document.createElement("div");
+    card.className = 'card mb-3 card-bloco-codigo shadow-sm';
+
+    const toggleBtnId = `toggleBtn${i}`;
+    const id = `codigoCollapse${i}`;
+    const colapsado = bloco.codigo.split('\n').length > 15;
+    const collapsedClass = colapsado ? 'collapse' : '';
+
+    card.innerHTML = `
+    <div id="${id}" class="${collapsedClass}">
+        ${bloco.titulo ? `<div class="titulo-codigo">${bloco.titulo}</div>` : ''}
+        <pre><code class="language-${bloco.linguagem}">${hljs.highlight(bloco.codigo, { language: bloco.linguagem }).value}</code></pre>
+    </div>
+    ${colapsado ? `
+        <button class="btn-toggle-codigo" id="${toggleBtnId}" data-bs-toggle="collapse" data-bs-target="#${id}" aria-expanded="false" aria-controls="${id}">
+        Mostrar código completo...
+        </button>
+    ` : ''}
+    <div class="card-body">
+        <strong class="text-uppercase text-muted">${bloco.linguagem}</strong>
+        <div class="ms-auto d-flex gap-2">
+        <button class="btn btn-sm btn-secondary-light" onclick="editarBlocoDeCodigo(${i})">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger btn-delete-prep" onclick="removerBlocoDeCodigo(${i})">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>
+    </div>
+    `;
+
+    container.appendChild(card);
+
+    if (colapsado) {
+      const toggleBtn = document.getElementById(toggleBtnId);
+      const collapseEl = document.getElementById(id);
+
+      collapseEl.addEventListener("show.bs.collapse", () => {
+        toggleBtn.textContent = "Esconder código";
+      });
+
+      collapseEl.addEventListener("hide.bs.collapse", () => {
+        toggleBtn.textContent = "Mostrar código completo";
+      });
+    }      
+  });
+
+  hljs.highlightAll();
+}
+
+let blocoEditandoIndex = null;
+
+function editarBlocoDeCodigo(index) {
+  const bloco = blocosDeCodigo[index];
+  document.getElementById("tituloCodigo").value = bloco.titulo || "";
+  document.getElementById("linguagemCodigo").value = bloco.linguagem;
+  document.getElementById("blocoCodigo").value = bloco.codigo;
+  blocoEditandoIndex = index;
+
+  const modal = new bootstrap.Modal(document.getElementById("modalCodigo"));
+  modal.show();
+}
+
+function removerBlocoDeCodigo(index) {
+  blocosDeCodigo.splice(index, 1);
+  renderizarBlocosDeCodigo();
+}
+
+function abrirPreviewMarkdown() {
+  const markdownBruto = gerar();
+  const markdownComEmojis = substituirShortcodesPorEmojis(markdownBruto);
+
+  const html = marked.parse(markdownComEmojis, {
+    highlight: function (code, lang) {
+      try {
+        return hljs.highlight(code, { language: lang }).value;
+      } catch {
+        return code;
+      }
+    },
+    breaks: true,
+    gfm: true,
+  });
+
+  const container = document.getElementById("previewMarkdownContent");
+  container.innerHTML = html;
+  container.classList.add("markdown-body");
+
+  const modal = new bootstrap.Modal(document.getElementById("modalPreview"));
+  modal.show();
+}
+  
+  
+function substituirShortcodesPorEmojis(texto) {
+  const mapa = {
+    ":star:": "⭐",
+    ":rosette:": "🏵️",
+    ":notebook:": "📓",
+    ":rocket:": "🚀",
+    ":bug:": "🐛",
+    ":wrench:": "🔧",
+    ":clipboard:": "📋",
+    ":warning:": "⚠️",
+    ":gear:": "⚙️",
+    ":mans_shoe:": "👞",
+    ":triangular_flag_on_post:": "🚩",
+    ":ship:": "🚢",
+    ":game_die:": "🎲",
+    ":eyeglasses:": "👓",
+  };
+
+  return texto.replace(/:[^:\s]+:/g, match => mapa[match] || match);
 }
   
