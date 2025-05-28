@@ -97,15 +97,20 @@ function renderizarPreparativos() {
                     </button>
                     <div class="list-group position-absolute z-3 sug-autocomplete" id="prepSugestoes${i}" style="display: none;"></div>
                 </div>
-                <ul class="list-group">
-                    ${prep.passos.map((p, j) => `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="editable" onclick="editarPassoPreparativo(${i}, ${j}, this)">${j + 1}. ${p}</span>
-                            <button class="btn btn-sm btn-outline-danger btn-delete-prep" onclick="removerPassoPreparativo(${i}, ${j})">
-                                <small>Remover</small>
-                            </button>
-                        </li>
-                    `).join('')}
+                <ul class="list-group" id="prepPassosList${i}">
+                ${prep.passos.map((p, j) => `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center flex-grow-1 gap-2">
+                        <i class="fas fa-grip-vertical drag-handle text-muted"></i>
+                        <span class="editable flex-grow-1" onclick="editarPassoPreparativo(${i}, ${j}, this)">
+                            ${p}
+                        </span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger btn-delete-prep" onclick="removerPassoPreparativo(${i}, ${j})">
+                        <small>Remover</small>
+                    </button>
+                    </li>
+                `).join('')}
                 </ul>
             </div>
         </div>
@@ -130,6 +135,37 @@ function renderizarPreparativos() {
         }, 0);
 
         container.appendChild(div);
+        
+        requestAnimationFrame(() => {
+          const ul = document.getElementById(`prepPassosList${i}`);
+          if (ul) {
+            Sortable.create(ul, {
+              animation: 150,
+              ghostClass: "sortable-ghost",
+              handle: ".drag-handle",
+              onEnd: function (evt) {
+                const movedItem = preparativos[i].passos.splice(
+                  evt.oldIndex,
+                  1
+                )[0];
+                preparativos[i].passos.splice(evt.newIndex, 0, movedItem);
+                salvarDraft();
+
+                numerarPassos(ul);
+
+                const items = ul.querySelectorAll("li .editable");
+                items.forEach((el, idx) => {
+                const texto = el.textContent.replace(/^\d+\.\s*/, "").trim();
+                el.textContent = `${idx + 1}. ${texto}`;
+                });
+              },
+            });
+          } else {
+            console.warn(`UL #prepPassosList${i} não encontrado`);
+          }
+
+          numerarPassos(ul);
+        });          
 
         setTimeout(() => {
             const collapseEl = document.getElementById(`prepCollapse${i}`);
@@ -155,8 +191,16 @@ function renderizarPreparativos() {
           
             // Atualiza já na renderização
             updateCaret();
-          }, 0);          
+          }, 0); 
     });
+}
+
+function numerarPassos(ul) {
+  const items = ul.querySelectorAll("li .editable");
+  items.forEach((el, idx) => {
+    const texto = el.textContent.replace(/^\d+\.\s*/, "").trim();
+    el.textContent = `${idx + 1}. ${texto}`;
+  });
 }
 
 function editarPassoPreparativo(prepIndex, passoIndex, spanEl) {
@@ -231,16 +275,36 @@ function editarPassoPreparativo(prepIndex, passoIndex, spanEl) {
             : '';
 
             li.innerHTML = `
-            <span>
+            <div class="d-flex align-items-center flex-grow-1 gap-2">
+                <i class="fas fa-grip-vertical text-muted drag-handle"></i>
+                <span class="flex-grow-1">
                 ${escaparUnderscores((index + 1) + '. ' + passo.texto)}${criteriosBadge}
-            </span>
-            <button class="btn btn-outline-danger btn-delete-prep" onclick="event.stopPropagation(); removerPasso(${index})">
-                <i class="fas fa-trash"></i>
+                </span>
+            </div>
+            <button class="btn btn-outline-danger btn-sm btn-delete-prep" onclick="event.stopPropagation(); removerPasso(${index})">
+                <i class="fas fa-trash-alt"></i>
             </button>
             `;
 
             lista.appendChild(li);
         });
+
+        setTimeout(() => {
+            if (!window.sortablePassosIniciado) {
+              Sortable.create(lista, {
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'sortable-ghost',
+                onEnd: function (evt) {
+                  const movedItem = passos.splice(evt.oldIndex, 1)[0];
+                  passos.splice(evt.newIndex, 0, movedItem);
+                  salvarDraft();
+                  renderizarPassos();
+                }
+              });
+              window.sortablePassosIniciado = true;
+            }
+          }, 0);          
     }
 
     function formatarListaOrdinal(numeros) {
@@ -526,34 +590,38 @@ ${postgres}${oracleUtf}
 }
 
 window.addEventListener('beforeunload', () => {
+    salvarDraft();
+});
+
+function salvarDraft() {
   const id = currentTemplateId || gerarIdTemplate();
   currentTemplateId = id;
 
-  nomeTarefa = document.getElementById('nomeTarefa').value.trim();
+  nomeTarefa = document.getElementById("nomeTarefa").value.trim();
 
   const draft = {
     templateId: id,
     nomeTarefa,
-    escopo: document.getElementById('escopo').value,
-    impacto: document.getElementById('impacto').value,
+    escopo: document.getElementById("escopo").value,
+    impacto: document.getElementById("impacto").value,
     criterios,
     passos,
     blocosDeCodigo,
     preparativos,
     navegadores: {
-      chrome: document.getElementById('chrome').checked,
-      edge: document.getElementById('edge').checked
+      chrome: document.getElementById("chrome").checked,
+      edge: document.getElementById("edge").checked,
     },
     bancos: {
-      sqlserver: document.getElementById('sqlserver').checked,
-      oracleIso: document.getElementById('oracleIso').checked,
-      postgres: document.getElementById('postgres').checked,
-      oracleUtf: document.getElementById('oracleUtf').checked
-    }
+      sqlserver: document.getElementById("sqlserver").checked,
+      oracleIso: document.getElementById("oracleIso").checked,
+      postgres: document.getElementById("postgres").checked,
+      oracleUtf: document.getElementById("oracleUtf").checked,
+    },
   };
 
-  localStorage.setItem('template_gitlab_draft', JSON.stringify(draft));
-});
+  localStorage.setItem("template_gitlab_draft", JSON.stringify(draft));
+}  
 
 window.addEventListener('DOMContentLoaded', () => {
   const keys = Object.keys(localStorage).filter(k => k.startsWith('template_gitlab_'));
@@ -1243,4 +1311,25 @@ function exportarPDF() {
 
   html2pdf().set(opt).from(element).save();
 }
-  
+
+function inicializarOrdenacaoPassos() {
+  const lista = document.getElementById("listaPassos");
+  if (!lista) return;
+
+  new Sortable(lista, {
+    animation: 150,
+    ghostClass: "sortable-ghost",
+    onEnd: function (evt) {
+      const novaOrdem = Array.from(lista.children).map((li) => {
+        const indexTexto = li.querySelector("span")?.textContent?.split(".")[0];
+        const indexOriginal = parseInt(indexTexto) - 1;
+        return passos[indexOriginal];
+      });
+
+      passos = novaOrdem;
+      renderizarPassos(); // Re-renderiza pra corrigir numeração e manter sincronizado
+    },
+  });
+}
+
+inicializarOrdenacaoPassos();

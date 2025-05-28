@@ -234,27 +234,11 @@
 
           <hr class="section-divider">
 
-          <div
-            class="d-flex justify-content-between align-items-center flex-wrap bg-light p-3 rounded shadow-sm toolbar-custom">
-            <button class="btn btn-secondary-light btn-sm" onclick="gerar()">
-              <i class="fa-solid fa-gears me-1"></i> Gerar Markdown
-              <small class="text-white-50 ms-1">(Alt + Enter)</small>
-            </button>
-
-            <button class="btn btn-delete-light btn-sm" onclick="limparDraft()">
-              <i class="fas fa-broom me-1"></i> Limpar rascunho
-            </button>
-          </div>
-
           <div class="d-flex justify-content-between align-items-center">
             <h5>
               <i class="fas fa-clipboard"></i>
               Resultado:
             </h5>
-            <button id="copy_btn" disabled="true" class="btn btn-outline-secondary btn-sm my-2"
-              onclick="copiarResultado()">
-              <i class="fas fa-copy"></i> Copiar
-            </button>
           </div>
           <textarea class="form-control" id="resultado" rows="25" readonly></textarea>
         </div>
@@ -343,9 +327,23 @@
     </div>
   </div>  
 
-  <button class="btn btn-primary shadow preview-fab" onclick="abrirPreviewMarkdown()">
-    <i class="fas fa-eye"></i>
-  </button>
+  <div id="floating-actions" class="floating-actions shadow">
+    <button class="btn btn-outline-secondary preview-fab w-100" onclick="abrirPreviewMarkdown()">
+      <i class="fas fa-eye"></i>
+    </button>
+  
+    <button class="btn btn-outline-secondary btn-sm w-100" onclick="gerar()">
+      <i class="fa-solid fa-gears me-1"></i> Gerar Markdown
+    </button>
+  
+    <button id="copy_btn" disabled class="btn btn-outline-secondary btn-sm w-100" onclick="copiarResultado()">
+      <i class="fas fa-copy"></i> Copiar
+    </button>
+
+    <button class="btn btn-outline-danger btn-sm w-100" onclick="limparDraft()">
+      <i class="fas fa-trash"></i> Limpar Rascunho
+    </button>
+  </div>  
 
   <div class="modal fade" id="modalPreview" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -373,6 +371,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.7/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
   <script src="./shortcuts.js"></script>
   <script src="./js/index.js"></script>
