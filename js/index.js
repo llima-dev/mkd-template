@@ -1231,3 +1231,16 @@ function substituirShortcodesPorEmojis(texto) {
   return texto.replace(/:[^:\s]+:/g, match => mapa[match] || match);
 }
   
+function exportarPDF() {
+  const element = document.getElementById("previewMarkdownContent");
+  const opt = {
+    margin: 0.5,
+    filename: `template-${nomeTarefa || "sem-nome"}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+  };
+
+  html2pdf().set(opt).from(element).save();
+}
+  
