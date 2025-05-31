@@ -94,7 +94,7 @@ function renderizarPreparativos() {
                     value="${prep.titulo}" onchange="preparativos[${i}].titulo = this.value">
             </div>
             <button class="btn btn-sm btn-outline-danger ms-2 btn-delete-prep" onclick="removerPreparativo(${i})">
-                <i class="fas fa-trash"></i>
+                Remover
             </button>
         </div>
 
