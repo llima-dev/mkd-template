@@ -1345,11 +1345,17 @@ function substituirShortcodesPorEmojis(texto) {
 function exportarPDF() {
   const element = document.getElementById("previewMarkdownContent");
   const opt = {
-    margin: 0.5,
-    filename: `template-${nomeTarefa || "sem-nome"}.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+    margin:       [0.5, 0.5, 0.7, 0.5], // top, left, bottom, right
+    filename:     `template-${nomeTarefa || "sem-nome"}.pdf`,
+    image:        { type: "jpeg", quality: 0.98 },
+    html2canvas:  {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      scrollY: 0,
+      windowHeight: element.scrollHeight
+    },
+    jsPDF:        { unit: "in", format: "a4", orientation: "portrait" }
   };
 
   html2pdf().set(opt).from(element).save();

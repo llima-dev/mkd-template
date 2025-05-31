@@ -340,3 +340,23 @@ li.divisoria.sortable-ghost {
     box-shadow: none !important;
     filter: none !important;
 }
+
+#previewMarkdownContent {
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+#previewMarkdownContent * {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    box-sizing: border-box;
+}
+
+.page-break {
+    page-break-before: always;
+    break-before: page;
+}
