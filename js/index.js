@@ -2,6 +2,8 @@
     let currentTemplateId = null;
     let nomeTarefa = '';
     let blocosDeCodigo = [];
+    let linksExternos = [];
+    let editandoIndex = null;
 
     function escaparUnderscores(texto) {
       return texto.replace(/_/g, '\\_');
@@ -477,6 +479,14 @@ function renderizarPassos() {
         markdown += `\n____\n${preparativosTexto}\n`;
     }
 
+    if (linksExternos.length) {
+      const linksMarkdown = linksExternos
+        .map(link => `* [${link.titulo}](${link.url})`)
+        .join('\n');
+  
+        markdown += `\n____\n### :link: Links auxiliares\n${linksMarkdown}\n`;
+    }
+
 markdown += `
 ____
 ### :mans_shoe: Passos
@@ -668,8 +678,9 @@ function salvarDraft() {
     },
   };
 
+  localStorage.setItem('linksExternos', JSON.stringify(linksExternos));
   localStorage.setItem("template_gitlab_draft", JSON.stringify(draft));
-}  
+}
 
 window.addEventListener('DOMContentLoaded', () => {
   const keys = Object.keys(localStorage).filter(k => k.startsWith('template_gitlab_'));
@@ -702,6 +713,12 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('oracleIso').checked = data.bancos?.oracleIso || false;
     document.getElementById('postgres').checked = data.bancos?.postgres || false;
     document.getElementById('oracleUtf').checked = data.bancos?.oracleUtf || false;
+
+    const linksSalvos = localStorage.getItem('linksExternos');
+    if (linksSalvos) {
+      linksExternos = JSON.parse(linksSalvos);
+      renderizarLinksExternos();
+    }
 
     // Restaurar critérios e passos
     criterios = data.criterios || [];
@@ -902,6 +919,7 @@ function exportarJson() {
         passos,
         blocosDeCodigo,
         preparativos,
+        linksExternos,
         navegadores: {
             chrome: document.getElementById('chrome').checked,
             edge: document.getElementById('edge').checked
@@ -980,7 +998,10 @@ function importarArquivoJson() {
       }));
       preparativos = data.preparativos || [];
       blocosDeCodigo = data.blocosDeCodigo || [];
+
+      linksExternos = data.linksExternos || [];
       
+      renderizarLinksExternos();
       renderizarBlocosDeCodigo(); 
       renderizarPreparativos();
       renderizarCriterios();
@@ -1347,6 +1368,7 @@ function substituirShortcodesPorEmojis(texto) {
     ":ship:": "🚢",
     ":game_die:": "🎲",
     ":eyeglasses:": "👓",
+    ":link:": "🔗" 
   };
 
   return texto.replace(/:[^:\s]+:/g, match => mapa[match] || match);
@@ -1393,3 +1415,75 @@ function inicializarOrdenacaoPassos() {
 }
 
 inicializarOrdenacaoPassos();
+
+function abrirModalLink() {
+  document.getElementById('tituloLink').value = '';
+  document.getElementById('urlLink').value = '';
+  const modal = new bootstrap.Modal(document.getElementById('modalLink'));
+  modal.show();
+}
+
+function salvarLink() {
+  const titulo = document.getElementById('tituloLink').value.trim();
+  const url = document.getElementById('urlLink').value.trim();
+
+  if (!titulo || !url) {
+    Swal.fire('Campos obrigatórios', 'Preencha título e URL.', 'warning');
+    return;
+  }
+
+  if (editandoIndex !== null) {
+    // Edição
+    linksExternos[editandoIndex] = { titulo, url };
+  } else {
+    // Adição
+    linksExternos.push({ titulo, url });
+  }
+
+  renderizarLinksExternos();
+  salvarDraft();
+
+  const modal = bootstrap.Modal.getInstance(document.getElementById('modalLink'));
+  modal.hide();
+  editandoIndex = null; // resetar após salvar
+}
+
+function renderizarLinksExternos() {
+  const container = document.getElementById('listaLinksExternos');
+  container.innerHTML = '';
+
+  linksExternos.forEach((link, index) => {
+    const item = document.createElement('div');
+    item.className = 'link-externo-item';
+    item.innerHTML = `
+      <span><a href="${link.url}" class="text-primary" title="${link.url}" target="_blank"><i class="fas fa-link"></i> ${link.titulo}</a></span>
+      <div>
+        <button class="btn btn-sm btn-secondary-light me-1" onclick="editarLink(${index})">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger btn-delete-prep" onclick="removerLink(${index})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+
+    container.appendChild(item);
+  });
+}
+
+function editarLink(index) {
+  const link = linksExternos[index];
+  editandoIndex = index;
+
+  document.getElementById('tituloLink').value = link.titulo;
+  document.getElementById('urlLink').value = link.url;
+
+  const modal = new bootstrap.Modal(document.getElementById('modalLink'));
+  modal.show();
+}
+
+function removerLink(index) {
+  linksExternos.splice(index, 1);
+  salvarDraft();
+  renderizarLinksExternos();
+}

@@ -49,38 +49,48 @@
                   <ul class="list-group list-group-flush">
                     <li class="list-group-item">
                       <i class="fas fa-shoe-prints text-primary me-2"></i>
-                      <strong>Passos:</strong> Pressione <kbd>Enter</kbd> para adicionar. Digite <code>&gt;</code> para
-                      gerar <span class="text-success">→</span>.
-                      Ao digitar <code>(</code>, aparecem atalhos como <code>Categoria (PL020)</code>, que viram
-                      <strong>negrito</strong> no markdown.
+                      <strong>Passos:</strong> Pressione <kbd>Enter</kbd> para adicionar. Use <code>&gt;</code> para gerar <span class="text-success">→</span>. 
+                      Digite <code>(</code> para ativar sugestões automáticas como <code>Categoria (PL020)</code>, que viram <strong>negrito</strong> no Markdown.
+                    </li>
+                    <li class="list-group-item">
+                      <i class="fas fa-divide text-info me-2"></i>
+                      <strong>Etapas:</strong> Clique em <kbd>+ Etapa</kbd> para adicionar divisórias entre blocos de passos. Elas são numeradas automaticamente.
                     </li>
                     <li class="list-group-item">
                       <i class="fas fa-bolt text-warning me-2"></i>
-                      <strong>Atalhos:</strong> Digite <code>/</code> em um campo de passo para abrir <em>blocos
-                        inteligentes</em> com múltiplos passos.
+                      <strong>Blocos inteligentes:</strong> Digite <code>/</code> em um campo para abrir <em>blocos pré-definidos</em> de múltiplos passos.
                     </li>
                     <li class="list-group-item">
-                      <i class="fas fa-layer-group text-info me-2"></i>
-                      <strong>Preparativos:</strong> Grupos extras de passos com título. Também aceitam blocos e atalhos
-                      com <code>(</code>.
+                      <i class="fas fa-layer-group text-success me-2"></i>
+                      <strong>Preparativos:</strong> Grupos colapsáveis com título e múltiplos passos. Também aceitam blocos e atalhos com <code>(</code> e <code>/</code>.
                     </li>
                     <li class="list-group-item">
                       <i class="fas fa-code text-danger me-2"></i>
-                      <strong>Markdown:</strong> Estrutura otimizada para reuso. Use <kbd>Alt</kbd> + <kbd>Enter</kbd>
-                      para gerar instantaneamente.
+                      <strong>Blocos de Código:</strong> Você pode adicionar trechos de código em diversas linguagens com título e colapsar se for muito longo.
+                    </li>
+                    <li class="list-group-item">
+                      <i class="fas fa-link text-primary me-2"></i>
+                      <strong>Links Auxiliares:</strong> Adicione URLs externas úteis para o template. Elas aparecerão na seção de referência.
+                    </li>
+                    <li class="list-group-item">
+                      <i class="fas fa-eye text-secondary me-2"></i>
+                      <strong>Preview:</strong> Use o botão flutuante <i class="fas fa-eye"></i> para visualizar como ficará o Markdown final.
                     </li>
                     <li class="list-group-item">
                       <i class="fas fa-file-export text-success me-2"></i>
-                      <strong>Importar/Exportar:</strong> Salve ou compartilhe com arquivos <code>.json</code>.
+                      <strong>Exportar:</strong> Baixe o template como arquivo <code>.json</code> ou <code>.pdf</code>. Ideal para backup ou compartilhamento.
+                    </li>
+                    <li class="list-group-item">
+                      <i class="fas fa-rocket text-dark me-2"></i>
+                      <strong>Atalho:</strong> Pressione <kbd>Alt</kbd> + <kbd>Enter</kbd> para gerar o Markdown rapidamente.
                     </li>
                     <li class="list-group-item">
                       <i class="fas fa-folder-open text-secondary me-2"></i>
-                      <strong>Personalização:</strong> Você pode adicionar novos <code>shortcuts</code> e
-                      <code>blocos de passos</code> diretamente no arquivo <code>shortcuts.js</code>, dentro da pasta do
-                      projeto.
+                      <strong>Personalização:</strong> Adicione novos <code>shortcuts</code> e <code>blocos</code> diretamente no arquivo <code>shortcuts.js</code>.
                     </li>
                   </ul>
                 </div>
+                
               </div>
             </div>
           </div>
@@ -100,8 +110,8 @@
                   <input type="file" id="arquivoJson" accept=".json" class="form-control">
                 </div>
                 <div class="modal-footer">
-                  <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                  <button class="btn btn-success" onclick="importarArquivoJson()">Importar agora</button>
+                  <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                  <button class="btn btn-outline-success" onclick="importarArquivoJson()">Importar agora</button>
                 </div>
               </div>
             </div>
@@ -130,16 +140,20 @@
           </div>
 
           <div class="mb-3">
-            <button class="btn btn-outline-secondary btn-sm" onclick="adicionarPreparativo()">
-              <i class="fas fa-plus"></i> Adicionar Preparativo
+            <button class="btn btn-outline-secondary btn-sm" onclick="adicionarPreparativo()" title="Adicionar preparativo">
+              <i class="fas fa-plus"></i> Preparativo
             </button>
-            <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCodigo">
-              <i class="fas fa-code"></i> Adicionar Bloco de Código
+            <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCodigo" title="Adicionar bloco de códido">
+              <i class="fas fa-code"></i> Bloco de Código
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="abrirModalLink()" title="Adicionar link auxiliar">
+              <i class="fas fa-link"></i> Link auxiliar
             </button>
           </div>
 
           <div id="containerBlocosCodigo" class="mt-3"></div>
           <div id="containerPreparativos"></div>
+          <div id="listaLinksExternos"></div>
 
           <hr class="section-divider">
 
@@ -264,8 +278,8 @@
           <input type="text" id="nomeExportar" class="form-control" placeholder="ex: plano-teste-2024">
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button class="btn btn-success" onclick="exportarJson()">Exportar agora</button>
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-outline-success" onclick="exportarJson()">Exportar agora</button>
         </div>
       </div>
     </div>
@@ -293,7 +307,7 @@
           <div id="listaCriteriosModal"></div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-primary" onclick="confirmarVinculoCriterios()">Salvar</button>
         </div>
       </div>
@@ -323,8 +337,8 @@
           <textarea id="blocoCodigo" class="form-control" rows="8" placeholder="Cole ou digite seu código aqui..."></textarea>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button class="btn btn-success" onclick="inserirBlocoDeCodigo()">Inserir</button>
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-outline-success" onclick="inserirBlocoDeCodigo()">Inserir</button>
         </div>
       </div>
     </div>
@@ -365,7 +379,25 @@
         </div>
       </div>
     </div>
-  </div>   
+  </div>
+  
+  <div class="modal fade" id="modalLink" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Link auxiliar</h5>
+        </div>
+        <div class="modal-body">
+          <input id="tituloLink" class="form-control mb-2" placeholder="Título do link">
+          <input id="urlLink" class="form-control" placeholder="https://exemplo.com">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-outline-success" onclick="salvarLink()">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer class="text-center mt-1 text-white" style="font-size: 0.9rem;">
     Desenvolvido por <strong>Lindomar Lima - ACT</strong>

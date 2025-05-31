@@ -38,7 +38,8 @@ hr.section-divider {
     text-align: left;
 }
 
-button.btn-outline-secondary {
+button.btn-outline-secondary,
+button.btn-outline-success {
     border: aliceblue !important;
 }
 
@@ -350,4 +351,41 @@ li.divisoria button:hover {
     border: 1px solid #51585e !important;
     color: white;
     background-color: #51585e;
+}
+
+#listaLinksExternos {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.link-externo-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    margin-bottom: 6px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.link-externo-item:hover {
+    background-color: #eef1f3;
+}
+
+.link-externo-item a {
+    color: #0d6efd;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.link-externo-item a:hover {
+    text-decoration: underline;
+}
+
+.link-externo-item .btn {
+    padding: 3px 6px;
+    font-size: 0.85rem;
+    margin-left: 4px;
 }
