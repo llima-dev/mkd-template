@@ -269,8 +269,10 @@ function editarPassoPreparativo(prepIndex, passoIndex, spanEl) {
 function renderizarPassos() {
   const lista = document.getElementById('listaPassos');
   lista.innerHTML = '';
-  let numeroVisivel = 1; // contador real dos passos numerados
+  let numeroVisivel = 1;
 
+  let etapaContador = 1;
+  
   passos.forEach((passo, index) => {
     const li = document.createElement('li');
     li.dataset.index = index;
@@ -285,9 +287,17 @@ function renderizarPassos() {
       li.classList.add('divisoria');
     }
 
-    const iconeBotao = passo.isDivisoria
-    ? '<i class="fas fa-minus"></i>'
-    : '<i class="fas fa-trash-alt"></i>';
+    if (passo.isDivisoria) {
+      li.className = 'list-group-item divisoria d-flex justify-content-between align-items-center';
+      li.innerHTML = `
+        <span class="etiqueta-etapa">--- Etapa ${etapaContador++} ---</span>
+        <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); removerPasso(${index})" title="Remover divisória">
+          <i class="fas fa-minus"></i>
+        </button>
+      `;
+      lista.appendChild(li);
+      return;
+    }
 
     const criteriosBadge = passo.criteriosVinculados?.length
       ? `<span class="badge bg-warning text-dark ms-2 fw-semibold">${formatarListaOrdinal(
@@ -306,7 +316,7 @@ function renderizarPassos() {
         </span>
       </div>
       <button class="btn btn-outline-danger btn-sm btn-delete-prep" onclick="event.stopPropagation(); removerPasso(${index})">
-          ${iconeBotao}
+        <i class="fas fa-trash-alt"></i>
       </button>
     `;
 
