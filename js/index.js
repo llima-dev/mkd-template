@@ -32,6 +32,17 @@
         }
     }
 
+    function adicionarDivisoria() {
+      passos.push({
+        texto: '-----------',
+        critico: false,
+        isDivisoria: true,
+        criteriosVinculados: []
+      });
+
+      renderizarPassos();
+    }
+
     function removerPasso(index) {
         passos.splice(index, 1);
         renderizarPassos();
@@ -255,57 +266,74 @@ function editarPassoPreparativo(prepIndex, passoIndex, spanEl) {
   input.focus();
 }  
 
-    function renderizarPassos() {
-        const lista = document.getElementById('listaPassos');
-        lista.innerHTML = '';
-        passos.forEach((passo, index) => {
-            const badge = passo.critico ? '<span class="badge bg-warning text-dark ms-2">⚠️ crítico</span>' : '';
-            const criteriosVinculados = passo.criteriosVinculados?.length
-                ? `<small class="text-muted ms-2">→ Critérios: ${passo.criteriosVinculados.map(c => c + 1).join(', ')}</small>`
-                : '';
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.setAttribute('onclick', `selecionarCriterios(${index})`);
-            li.style.cursor = 'pointer';
+function renderizarPassos() {
+  const lista = document.getElementById('listaPassos');
+  lista.innerHTML = '';
+  let numeroVisivel = 1; // contador real dos passos numerados
 
-            const criteriosBadge = passo.criteriosVinculados.length
-            ? `<span class="badge bg-warning text-dark ms-2 fw-semibold">${formatarListaOrdinal(
-                passo.criteriosVinculados.map(c => c + 1)
-                )}</span>`
-            : '';
+  passos.forEach((passo, index) => {
+    const li = document.createElement('li');
+    li.dataset.index = index;
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    li.style.cursor = 'pointer';
 
-            li.innerHTML = `
-            <div class="d-flex align-items-center flex-grow-1 gap-2">
-                <i class="fas fa-grip-vertical text-muted drag-handle"></i>
-                <span class="flex-grow-1">
-                ${escaparUnderscores((index + 1) + '. ' + passo.texto)}${criteriosBadge}
-                </span>
-            </div>
-            <button class="btn btn-outline-danger btn-sm btn-delete-prep" onclick="event.stopPropagation(); removerPasso(${index})">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-            `;
-
-            lista.appendChild(li);
-        });
-
-        setTimeout(() => {
-            if (!window.sortablePassosIniciado) {
-              Sortable.create(lista, {
-                animation: 150,
-                handle: '.drag-handle',
-                ghostClass: 'sortable-ghost',
-                onEnd: function (evt) {
-                  const movedItem = passos.splice(evt.oldIndex, 1)[0];
-                  passos.splice(evt.newIndex, 0, movedItem);
-                  salvarDraft();
-                  renderizarPassos();
-                }
-              });
-              window.sortablePassosIniciado = true;
-            }
-          }, 0);          
+    if (!passo.isDivisoria) {
+      li.setAttribute('onclick', `selecionarCriterios(${index})`);
     }
+
+    if (passo.isDivisoria) {
+      li.classList.add('divisoria');
+    }
+
+    const iconeBotao = passo.isDivisoria
+    ? '<i class="fas fa-minus"></i>'
+    : '<i class="fas fa-trash-alt"></i>';
+
+    const criteriosBadge = passo.criteriosVinculados?.length
+      ? `<span class="badge bg-warning text-dark ms-2 fw-semibold">${formatarListaOrdinal(
+          passo.criteriosVinculados.map(c => c + 1)
+        )}</span>`
+      : '';
+
+    const numero = passo.isDivisoria ? '' : `${numeroVisivel}. `;
+    if (!passo.isDivisoria) numeroVisivel++;
+
+    li.innerHTML = `
+      <div class="d-flex align-items-center flex-grow-1 gap-2">
+        <i class="fas fa-grip-vertical text-muted drag-handle"></i>
+        <span class="flex-grow-1">
+          ${escaparUnderscores(numero + passo.texto)}${criteriosBadge}
+        </span>
+      </div>
+      <button class="btn btn-outline-danger btn-sm btn-delete-prep" onclick="event.stopPropagation(); removerPasso(${index})">
+          ${iconeBotao}
+      </button>
+    `;
+
+    lista.appendChild(li);
+  });
+
+  setTimeout(() => {
+    if (!window.sortablePassosIniciado) {
+      Sortable.create(lista, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: function (evt) {
+          const novaOrdem = Array.from(lista.children).map(li => {
+            const idx = parseInt(li.dataset.index, 10);
+            return passos[idx];
+          });
+          passos = novaOrdem;
+          salvarDraft();
+          renderizarPassos();
+        }
+      });
+      window.sortablePassosIniciado = true;
+    }
+  }, 0);
+}
+
 
     function formatarListaOrdinal(numeros) {
         if (numeros.length === 1) return `critério ${numeros[0]}`;
@@ -393,17 +421,27 @@ function editarPassoPreparativo(prepIndex, passoIndex, spanEl) {
     ).join('\n');
   return `### :rosette: Preparativo ${i + 1}${titulo}\n${passos}`;}).join('\n\n');
 
-    let warningCount = 1;
-const passosTexto = passos.map((p, i) => {
-    const isCritico = p.criteriosVinculados?.length > 0;
-    const textoLimpo = escaparUnderscores(
+  let passosTexto = '';
+  let passoNumero = 1;
+  let etapaContador = 1;
+
+  passos.forEach(p => {
+    if (p.isDivisoria) {
+      passosTexto += `\n--- Etapa ${etapaContador} ---\n\n`;
+      etapaContador++;
+    } else {
+      const textoLimpo = escaparUnderscores(
         p.texto.replace(/\(([A-Z]{2}\d{3})\)/g, '(**$1**)')
-    );
-    const sufixo = p.criteriosVinculados?.length
-    ? ` :warning: (${p.criteriosVinculados.map(c => c + 1).join(',')})`
-    : '';
-    return `${i + 1}. ${textoLimpo}${sufixo}`;
-}).join('\n');
+      );
+
+      const sufixo = p.criteriosVinculados?.length
+        ? ` :warning: (${p.criteriosVinculados.map(c => c + 1).join(',')})`
+        : '';
+
+      passosTexto += `${passoNumero}. ${textoLimpo}${sufixo}\n`;
+      passoNumero++;
+    }
+  });
 
   const chrome = document.getElementById('chrome').checked ? "* [X] Google Chrome\n" : "* [ ] Google Chrome\n";
   const edge = document.getElementById('edge').checked ? "* [X] Microsoft Edge\n" : "* [ ] Microsoft Edge\n";
@@ -924,7 +962,12 @@ function importarArquivoJson() {
       document.getElementById('escopo').value = data.escopo || '';
       document.getElementById('impacto').value = data.impacto || '';
       criterios = data.criterios || [];
-      passos = data.passos || [];
+      passos = (data.passos || []).map(p => ({
+        texto: p.texto || '',
+        critico: p.critico || false,
+        criteriosVinculados: p.criteriosVinculados || [],
+        isDivisoria: p.isDivisoria === true
+      }));
       preparativos = data.preparativos || [];
       blocosDeCodigo = data.blocosDeCodigo || [];
       
@@ -945,6 +988,16 @@ function importarArquivoJson() {
       const modal = bootstrap.Modal.getInstance(modalEl);
       modal.hide();
 
+      const nomeArquivo =
+      data.nomeTarefa?.trim() ||
+      file.name.replace('.json', '') ||
+      'template_gitlab';
+  
+      document.getElementById('nomeExportar').value = nomeArquivo;
+  
+      document.getElementById('tituloPrincipal').innerHTML =
+      `<i class="fas fa-tools"></i> Gerador de Template GitLab <small class="text-muted">(${nomeArquivo})</small>`;
+
       Swal.fire({
         icon: 'success',
         title: 'Importado com sucesso!',
@@ -958,16 +1011,6 @@ function importarArquivoJson() {
   };
 
   reader.readAsText(file);
-
-    const nomeArquivo =
-    data.nomeTarefa?.trim() ||
-    file.name.replace('.json', '') ||
-    'template_gitlab';
-
-    document.getElementById('nomeExportar').value = nomeArquivo;
-
-    const titulo = document.getElementById('tituloPrincipal').innerHTML =
-  `<i class="fas fa-tools"></i> Gerador de Template GitLab <small class="text-muted">(${nomeArquivo})</small>`;
 }
 
 function aplicarSubstituicoesSeta(elemento) {
@@ -1319,15 +1362,16 @@ function inicializarOrdenacaoPassos() {
   new Sortable(lista, {
     animation: 150,
     ghostClass: "sortable-ghost",
-    onEnd: function (evt) {
-      const novaOrdem = Array.from(lista.children).map((li) => {
-        const indexTexto = li.querySelector("span")?.textContent?.split(".")[0];
-        const indexOriginal = parseInt(indexTexto) - 1;
-        return passos[indexOriginal];
+    onEnd: function () {
+      const novaOrdem = Array.from(lista.children).map(li => {
+        const idx = parseInt(li.dataset.index, 10);
+        return passos[idx];
       });
 
       passos = novaOrdem;
-      renderizarPassos(); // Re-renderiza pra corrigir numeração e manter sincronizado
+
+      salvarDraft();
+      renderizarPassos();
     },
   });
 }

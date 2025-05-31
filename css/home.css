@@ -237,44 +237,106 @@ button.btn-outline-secondary {
     bottom: 20px;
     right: 20px;
     display: flex;
-    flex-direction: column; /* 👈 Coluna vertical */
+    flex-direction: column;
+    /* 👈 Coluna vertical */
     gap: 10px;
     padding: 10px;
     background-color: #212529;
     border-radius: 12px;
     z-index: 1050;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  }
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
 
-  .floating-actions button {
+.floating-actions button {
     color: white;
     border: none;
-  }
+}
 
-  .card-header {
+.card-header {
     background-color: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
     padding: 0.75rem 1rem;
-  }
-  
-  .card-header input.form-control {
+}
+
+.card-header input.form-control {
     border: none;
     background-color: transparent;
     font-weight: 500;
     font-size: 1rem;
     box-shadow: none;
     padding-left: 0;
-  }
-  .card-header input:focus {
+}
+
+.card-header input:focus {
     outline: none;
     box-shadow: none;
-  }
+}
 
-  .collapse:not(.show) {
+.collapse:not(.show) {
     display: block;
     height: 0;
     overflow: hidden;
     transition: height 0.3s ease;
-  }
+}
+
+li.divisoria {
+    background-color: #000000;
+    position: relative;
+    padding-right: 17px;
+    border: none;
+    cursor: pointer;
+    height: 2px; /* 👈 linha fina real */
+    color: white;
+    margin: 0.5rem 0;
+    overflow: visible; /* permite que o botão flutue fora */
+}
+
+li.divisoria:hover {
+    background-color: #000000 !important;
+}
+
+li.divisoria button {
+    background-color: transparent;
+    color: white;
+    position: absolute;
+    right: 0;
+    font-size: 12px;
+    opacity: 0.5;
+}
+
+li.divisoria button:hover {
+    background-color: transparent;
+    color: white;
+    opacity: 1;
+}
+
+li.divisoria span {
+    display: none !important;
+}
+
+li.divisoria .fa-grip-vertical {
+    display: none !important;
+}
+
+/* linha visual (opcional) */
+li.divisoria::before {
+    display: block;
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #fff;
+    opacity: 0.4;
+    top: 0;
+}
+
+li.divisoria:hover,
+li.divisoria:focus,
+li.divisoria.sortable-ghost {
+    background-color: #000000 !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
