@@ -1427,7 +1427,7 @@ function salvarLink() {
   const titulo = document.getElementById('tituloLink').value.trim();
   const url = document.getElementById('urlLink').value.trim();
 
-  if (!titulo || !url) {
+  if (!titulo) {
     Swal.fire('Campos obrigatórios', 'Preencha título e URL.', 'warning');
     return;
   }
@@ -1489,7 +1489,7 @@ function removerLink(index) {
 }
 
 function abrirVisualizacaoFluxo() {
-  let diagrama = 'flowchart TD\n';
+  let diagrama = 'flowchart LR\n';
   diagrama += `A[Tarefa: ${nomeTarefa || 'Sem nome'}]:::etapa\n`;
   diagrama += `A --> PX[Passos de Teste]:::etapa\n`;
 
@@ -1533,10 +1533,10 @@ function abrirVisualizacaoFluxo() {
 
   // Estilos visuais
   diagrama += `
-    classDef etapa fill:#fff3cd,stroke:#856404,stroke-width:2px;
-    classDef passo fill:#e0f7fa,stroke:#00796b;
-    classDef critico fill:#ffe5e5,stroke:#d00,stroke-width:2px;
-    classDef criterio fill:#f9f0ff,stroke:#663399;
+    classDef etapa fill:#fff3cd,stroke:#856404,stroke-width:2px,color:#000;
+    classDef passo fill:#b2ebf2,stroke:#00796b,color:#000;
+    classDef critico fill:#ef9a9a,stroke:#b71c1c,stroke-width:2px,color:#000;
+    classDef criterio fill:#e1bee7,stroke:#663399,color:#000;
   `;
 
   // Renderização
@@ -1608,41 +1608,15 @@ function sanitizarTextoMermaid(texto) {
     .trim();
 }
 
-function abrirEditorMermaidSimples() {
+function abrirNoKroki() {
   const mermaidCode = window.ultimoMermaidCode?.trim();
-  console.log(window.ultimoMermaidCode)
+  if (!mermaidCode) return alert("Gere o fluxograma primeiro.");
 
+  const compressed = pako.deflate(mermaidCode, { level: 9 });
+  const encoded = btoa(String.fromCharCode(...compressed))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-  if (!mermaidCode) {
-    Swal.fire({
-      icon: "error",
-      title: "Nenhum fluxograma encontrado",
-      text: "Gere o fluxograma primeiro para poder copiá-lo.",
-    });
-    return;
-  }
-
-  navigator.clipboard.writeText(mermaidCode)
-    .then(() => {
-      Swal.fire({
-        icon: "success",
-        title: "Código copiado!",
-        html: "Agora é só colar no <strong>Mermaid Live</strong> com <kbd>Ctrl+V</kbd>.<br><br>",
-        confirmButtonText: 'Abrir Mermaid Live',
-        showCancelButton: true,
-        cancelButtonText: 'Fechar',
-      }).then(result => {
-        if (result.isConfirmed) {
-          window.open("https://mermaid.live/edit", "_blank");
-        }
-      });
-    })
-    .catch(err => {
-      console.error("Erro ao copiar:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Erro ao copiar",
-        text: "Não foi possível copiar o código para a área de transferência.",
-      });
-    });
+  const url = `https://kroki.io/mermaid/svg/${encoded}`;
+  window.open(url, '_blank');
 }
+

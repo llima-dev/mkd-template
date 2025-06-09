@@ -410,8 +410,8 @@
           <h5 class="modal-title">
             <i class="fas fa-project-diagram"></i>
             Fluxograma da Tarefa
-            <button class="btn btn-outline-secondary btn-sm" onclick="abrirEditorMermaidSimples()">
-              <i class="fas fa-share-square"></i> Copiar e abrir Mermaid Live
+            <button class="btn btn-outline-secondary btn-sm" onclick="abrirNoKroki()">
+              <i class="fas fa-share-square"></i> Gerar SVG
             </button>
             </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
@@ -427,6 +427,7 @@
     Desenvolvido por <strong>Lindomar Lima - ACT</strong>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script>
