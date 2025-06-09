@@ -30,6 +30,10 @@
               <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalExportar">
                 <i class="fas fa-upload me-1"></i> Exportar template
               </button>
+
+              <button class="btn btn-outline-secondary btn-sm" onclick="abrirVisualizacaoFluxo()">
+                <i class="fas fa-project-diagram"></i> Fluxograma
+              </button>              
             </div>
 
             <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjuda">
@@ -399,10 +403,38 @@
     </div>
   </div>
 
+  <div class="modal fade" id="modalFluxo" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content text-dark">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-project-diagram"></i>
+            Fluxograma da Tarefa
+            <button class="btn btn-outline-secondary btn-sm" onclick="abrirEditorMermaidSimples()">
+              <i class="fas fa-share-square"></i> Copiar e abrir Mermaid Live
+            </button>
+            </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mermaid" id="fluxoMermaid">graph TD...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="text-center mt-1 text-white" style="font-size: 0.9rem;">
     Desenvolvido por <strong>Lindomar Lima - ACT</strong>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: false });
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.7/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>

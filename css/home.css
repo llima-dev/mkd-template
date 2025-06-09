@@ -389,3 +389,32 @@ li.divisoria button:hover {
     font-size: 0.85rem;
     margin-left: 4px;
 }
+
+#modalFluxo .modal-dialog {
+    max-width: 98vw;
+    height: 90vh;
+}
+
+#modalFluxo .modal-content {
+    height: 100%;
+}
+
+#modalFluxo .modal-body {
+    height: 100%;
+    overflow: auto;
+}
+
+#fluxoMermaid {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+#fluxoMermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+}
+
+.mermaid {
+    height: 100% !important;
+}

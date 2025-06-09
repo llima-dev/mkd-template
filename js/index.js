@@ -1487,3 +1487,162 @@ function removerLink(index) {
   salvarDraft();
   renderizarLinksExternos();
 }
+
+function abrirVisualizacaoFluxo() {
+  let diagrama = 'flowchart TD\n';
+  diagrama += `A[Tarefa: ${nomeTarefa || 'Sem nome'}]:::etapa\n`;
+  diagrama += `A --> PX[Passos de Teste]:::etapa\n`;
+
+  let passoNumero = 1;
+  let prev = 'PX';
+  let etapaContador = 1;
+
+  passos.forEach((p, idx) => {
+    if (!p.texto || typeof p.texto !== "string") return;
+
+    const textoLimpo = p.texto.trim();
+
+    // Se for divisória, cria um nó visual de etapa
+    if (textoLimpo.startsWith("Etapa") || p.isDivisoria) {
+      const eid = `E${etapaContador}`;
+      const nomeEtapa = /^[\-]+$/.test(textoLimpo) ? `Etapa ${etapaContador}` : textoLimpo;
+      diagrama += `${prev} --> ${eid}["${nomeEtapa}"]:::etapa\n`;
+      prev = eid;
+      etapaContador++;
+      return;
+    }
+
+    // Caso seja um passo real
+    const id = `S${idx}`;
+    const texto = sanitizarTextoMermaid(`${passoNumero++} - ${textoLimpo}`);
+    const critico = Array.isArray(p.criteriosVinculados) && p.criteriosVinculados.length > 1;
+    const classe = critico ? 'critico' : 'passo';
+
+    diagrama += `${prev} --> ${id}["${texto}"]:::${classe}\n`;
+    prev = id;
+
+    // Critérios vinculados
+    if (Array.isArray(p.criteriosVinculados)) {
+      p.criteriosVinculados.forEach((criterioIdx, j) => {
+        const cid = `C_${idx}_${j}`;
+        const textoCrit = sanitizarTextoMermaid(criterios[criterioIdx] || `Critério ${criterioIdx + 1}`);
+        diagrama += `${id} -- critério --> ${cid}["${textoCrit}"]:::criterio\n`;
+      });
+    }
+  });
+
+  // Estilos visuais
+  diagrama += `
+    classDef etapa fill:#fff3cd,stroke:#856404,stroke-width:2px;
+    classDef passo fill:#e0f7fa,stroke:#00796b;
+    classDef critico fill:#ffe5e5,stroke:#d00,stroke-width:2px;
+    classDef criterio fill:#f9f0ff,stroke:#663399;
+  `;
+
+  // Renderização
+  const container = document.getElementById("fluxoMermaid");
+  container.innerHTML = "";
+
+  const novo = document.createElement("div");
+  novo.className = "mermaid";
+  novo.style.visibility = "hidden";
+  novo.innerHTML = diagrama;
+  container.appendChild(novo);
+
+  const modalEl = document.getElementById("modalFluxo");
+  const modal = new bootstrap.Modal(modalEl);
+
+  modalEl.addEventListener("shown.bs.modal", function onShow() {
+    mermaid.init(undefined, novo);
+
+    setTimeout(() => {
+      novo.style.visibility = "visible"; 
+      const svg = container.querySelector("svg");
+      if (svg) {
+        svg.setAttribute("width", "100%");
+        svg.setAttribute("height", "100%");
+        svg.style.width = "100%";
+        svg.style.height = "100%";
+        svg.style.maxHeight = "none";
+
+        svgPanZoom(svg, {
+          zoomEnabled: true,
+          controlIconsEnabled: true,
+          fit: true,
+          center: true,
+          minZoom: 0.2,
+          maxZoom: 10,
+          contain: true
+        });
+      }
+    }, 150);
+
+    modalEl.removeEventListener("shown.bs.modal", onShow);
+  });
+
+  modalEl.addEventListener("hidden.bs.modal", function onHide() {
+    container.innerHTML = "";
+    modalEl.removeEventListener("hidden.bs.modal", onHide);
+  });
+
+  window.ultimoMermaidCode = diagrama;
+
+  modal.show();
+}
+
+function sanitizarTextoMermaid(texto) {
+  return texto
+    .replace(/"/g, "'")
+    .replace(/\n/g, " ")
+    .replace(/→/g, "->")
+    .replace(/•/g, "-")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/:\s*<br\/?>/g, " —<br/>")
+    .replace(/-<br\/>>/g, "→")                        // resolve setas com br
+    .replace(/<br\/>\s*"\]/g, '"]')                   // limpa <br/> no final
+    .replace(/^(\d+)\./, "$1 -")                      // evita listas markdown
+    .replace(/<br>/g, "<br/>")
+    .replace(/(.{40})/g, "$1<br/>")
+    .trim();
+}
+
+function abrirEditorMermaidSimples() {
+  const mermaidCode = window.ultimoMermaidCode?.trim();
+  console.log(window.ultimoMermaidCode)
+
+
+  if (!mermaidCode) {
+    Swal.fire({
+      icon: "error",
+      title: "Nenhum fluxograma encontrado",
+      text: "Gere o fluxograma primeiro para poder copiá-lo.",
+    });
+    return;
+  }
+
+  navigator.clipboard.writeText(mermaidCode)
+    .then(() => {
+      Swal.fire({
+        icon: "success",
+        title: "Código copiado!",
+        html: "Agora é só colar no <strong>Mermaid Live</strong> com <kbd>Ctrl+V</kbd>.<br><br>",
+        confirmButtonText: 'Abrir Mermaid Live',
+        showCancelButton: true,
+        cancelButtonText: 'Fechar',
+      }).then(result => {
+        if (result.isConfirmed) {
+          window.open("https://mermaid.live/edit", "_blank");
+        }
+      });
+    })
+    .catch(err => {
+      console.error("Erro ao copiar:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Erro ao copiar",
+        text: "Não foi possível copiar o código para a área de transferência.",
+      });
+    });
+}
