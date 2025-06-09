@@ -487,11 +487,18 @@ function renderizarPassos() {
         markdown += `\n____\n### :link: Links auxiliares\n${linksMarkdown}\n`;
     }
 
+    let flowText = '';
+    const incluirFluxograma = document.getElementById("incluirFluxograma")?.checked;
+
+    if (incluirFluxograma && nomeTarefa) {
+      flowText += `> Diagrama do teste [visualizar](ARQUIVO.svg)\n`;
+    }
+
 markdown += `
 ____
 ### :mans_shoe: Passos
 ${passosTexto}
-
+${flowText}
 ____
 ### :warning: Critério de aceitação
 ${criteriosTexto}
@@ -714,6 +721,11 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('postgres').checked = data.bancos?.postgres || false;
     document.getElementById('oracleUtf').checked = data.bancos?.oracleUtf || false;
 
+    const salvarPreferenciaFluxograma = localStorage.getItem("incluirFluxograma");
+    if (salvarPreferenciaFluxograma !== null) {
+      document.getElementById("incluirFluxograma").checked = salvarPreferenciaFluxograma === "true";
+    }
+
     const linksSalvos = localStorage.getItem('linksExternos');
     if (linksSalvos) {
       linksExternos = JSON.parse(linksSalvos);
@@ -920,6 +932,7 @@ function exportarJson() {
         blocosDeCodigo,
         preparativos,
         linksExternos,
+        incluirFluxograma: document.getElementById("incluirFluxograma").checked,
         navegadores: {
             chrome: document.getElementById('chrome').checked,
             edge: document.getElementById('edge').checked
@@ -1013,6 +1026,7 @@ function importarArquivoJson() {
       document.getElementById('oracleIso').checked = data.bancos?.oracleIso || false;
       document.getElementById('postgres').checked = data.bancos?.postgres || false;
       document.getElementById('oracleUtf').checked = data.bancos?.oracleUtf || false;
+      document.getElementById("incluirFluxograma").checked = data.incluirFluxograma;
 
       // Fecha modal e avisa
       const modalEl = document.getElementById('modalImportar');
@@ -1368,7 +1382,8 @@ function substituirShortcodesPorEmojis(texto) {
     ":ship:": "🚢",
     ":game_die:": "🎲",
     ":eyeglasses:": "👓",
-    ":link:": "🔗" 
+    ":link:": "🔗",
+    ":chart:": "💹"
   };
 
   return texto.replace(/:[^:\s]+:/g, match => mapa[match] || match);
@@ -1620,3 +1635,6 @@ function abrirNoKroki() {
   window.open(url, '_blank');
 }
 
+document.getElementById("incluirFluxograma").addEventListener("change", function () {
+  localStorage.setItem("incluirFluxograma", this.checked);
+});
