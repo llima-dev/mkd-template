@@ -418,3 +418,19 @@ li.divisoria button:hover {
 .mermaid {
     height: 100% !important;
 }
+
+.comentario-bloco {
+    border-left: 5px solid #ffc107;
+    background-color: #dadada;
+    color: #664d03;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.preview-coment-title {
+    font-size: 1.1rem !important;
+}
+
+.preview-coment-title i {
+    font-size: 0.95rem !important;
+}

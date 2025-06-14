@@ -4,6 +4,8 @@
     let blocosDeCodigo = [];
     let linksExternos = [];
     let editandoIndex = null;
+    let comentariosAtencao = [];
+    let comentarioEditandoIndex = null;
 
     function escaparUnderscores(texto) {
       return texto.replace(/_/g, '\\_');
@@ -471,6 +473,11 @@ function renderizarPassos() {
         return `${titulo}\`\`\`${b.linguagem}\n${b.codigo}\n\`\`\``;
       }).join('\n\n');
 
+    if (comentariosAtencao.length > 0) {
+      const comentariosMd = comentariosAtencao.map(c => `> ${escaparUnderscores(c)}`).join('\n\n');
+      markdown += `\n### :exclamation: Pontos de atenção\n\n${comentariosMd}\n`;
+    }
+
     if (blocosTexto) {
       markdown += `\n### :notebook: Código auxiliar\n${blocosTexto}\n`;
     }
@@ -673,6 +680,7 @@ function salvarDraft() {
     passos,
     blocosDeCodigo,
     preparativos,
+    comentariosAtencao,
     navegadores: {
       chrome: document.getElementById("chrome").checked,
       edge: document.getElementById("edge").checked,
@@ -738,7 +746,9 @@ window.addEventListener('DOMContentLoaded', () => {
     preparativos = data.preparativos || [];
 
     blocosDeCodigo = data.blocosDeCodigo || [];
-    
+    comentariosAtencao = data.comentariosAtencao || [];
+
+    renderizarComentariosPreview();    
     renderizarBlocosDeCodigo();
     renderizarCriterios();
     renderizarPassos();
@@ -752,7 +762,8 @@ window.addEventListener('DOMContentLoaded', () => {
 document.getElementById('nomeTarefa').addEventListener('input', (e) => {
   const valor = e.target.value.trim();
   nomeTarefa = valor;
-  document.title = valor + '-template' || 'Gerador de Template GitLab';
+  document.title = valor + '-TEMPLATE-TESTES' || 'Gerador de Template GitLab';
+  document.getElementById('nomeExportar').value = nomeTarefa;
   
   document.getElementById('tituloPrincipal').innerHTML = `
     <i class="fas fa-tools"></i> Gerador de Template GitLab 
@@ -809,12 +820,14 @@ function limparDraft() {
       preparativos = [];
       blocosDeCodigo = [];
       blocoEditandoIndex = null;
+      comentariosAtencao = [];
 
       // Renderizações
       renderizarPassos();
       renderizarCriterios();
       renderizarPreparativos();
       renderizarBlocosDeCodigo();
+      renderizarComentariosPreview();
 
       // Reset título e ID
       currentTemplateId = null;
@@ -932,6 +945,7 @@ function exportarJson() {
         blocosDeCodigo,
         preparativos,
         linksExternos,
+        comentariosAtencao,
         incluirFluxograma: document.getElementById("incluirFluxograma").checked,
         navegadores: {
             chrome: document.getElementById('chrome').checked,
@@ -948,8 +962,7 @@ function exportarJson() {
   data.templateId = currentTemplateId || gerarIdTemplate();
   data.nomeTarefa = document.getElementById('nomeTarefa').value.trim();
 
-  const nome = document.getElementById('nomeExportar').value.trim() || 
-             (nomeTarefa ? nomeTarefa.replace(/\s+/g, '-').toLowerCase() : 'template_gitlab');
+  const nome = (nomeTarefa ? nomeTarefa.replace(/\s+/g, '-').toLowerCase() : 'template_gitlab');
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -1013,7 +1026,9 @@ function importarArquivoJson() {
       blocosDeCodigo = data.blocosDeCodigo || [];
 
       linksExternos = data.linksExternos || [];
+      comentariosAtencao = data.comentariosAtencao || [];
       
+      renderizarComentariosPreview();
       renderizarLinksExternos();
       renderizarBlocosDeCodigo(); 
       renderizarPreparativos();
@@ -1383,7 +1398,8 @@ function substituirShortcodesPorEmojis(texto) {
     ":game_die:": "🎲",
     ":eyeglasses:": "👓",
     ":link:": "🔗",
-    ":chart:": "💹"
+    ":chart:": "💹",
+    ":exclamation:": "❗️"
   };
 
   return texto.replace(/:[^:\s]+:/g, match => mapa[match] || match);
@@ -1638,3 +1654,93 @@ function abrirNoKroki() {
 document.getElementById("incluirFluxograma").addEventListener("change", function () {
   localStorage.setItem("incluirFluxograma", this.checked);
 });
+
+function abrirModalComentarios(index = null) {
+  comentarioEditandoIndex = index;
+
+  document.getElementById("comentarioTexto").value =
+    index !== null ? comentariosAtencao[index] : "";
+
+  const modal = new bootstrap.Modal(document.getElementById("modalComentario"));
+  modal.show();
+}
+
+function salvarComentario() {
+  const texto = document.getElementById("comentarioTexto").value.trim();
+  if (!texto) return;
+
+  if (comentarioEditandoIndex !== null) {
+    comentariosAtencao[comentarioEditandoIndex] = texto;
+    comentarioEditandoIndex = null;
+  } else {
+    comentariosAtencao.push(texto);
+  }
+
+  renderizarComentariosPreview();
+  bootstrap.Modal.getInstance(document.getElementById("modalComentario")).hide();
+
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: 'Comentário salvo!',
+    timer: 1500,
+    showConfirmButton: false
+  });
+}
+
+function renderizarComentariosPreview() {
+  const container = document.getElementById("previewComentarios");
+  container.innerHTML = '';
+
+  if (comentariosAtencao.length === 0) return;
+
+  const titulo = document.createElement('h5');
+  titulo.className = 'fw-bold preview-coment-title';
+  titulo.innerHTML = `<i class="fas fa-exclamation-circle text-secondary"></i> Pontos de Atenção`;
+  container.appendChild(titulo);
+
+  comentariosAtencao.forEach((coment, i) => {
+    const div = document.createElement('div');
+    div.className = 'alert shadow-sm comentario-bloco d-flex justify-content-between align-items-start';
+  
+    div.innerHTML = `
+      <div><i class="fas fa-exclamation-triangle me-2"></i>${coment}</div>
+      <div class="ms-3">
+        <button class="btn btn-sm btn-secondary-light" title="Editar" onclick="abrirModalComentarios(${i})">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger btn-delete-prep" title="Excluir" onclick="removerComentario(${i})">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    `;
+  
+    container.appendChild(div);
+  });
+  
+}
+
+function removerComentario(index) {
+  Swal.fire({
+    icon: 'question',
+    title: 'Remover comentário?',
+    text: 'Essa ação não poderá ser desfeita.',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, remover',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      comentariosAtencao.splice(index, 1);
+      renderizarComentariosPreview();
+      Swal.fire({
+        toast: true,
+        icon: 'success',
+        title: 'Comentário removido!',
+        position: 'top-end',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    }
+  });
+}

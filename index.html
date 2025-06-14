@@ -138,6 +138,16 @@
 
           <hr class="section-divider">
 
+          <div class="mb-3">
+            <button class="btn btn-outline-secondary btn-sm" onclick="abrirModalComentarios()" title="Adicionar pontos de atenção">
+              <i class="fas fa-comment-dots"></i> Adicionar comentário
+            </button>            
+          </div>
+
+          <div id="previewComentarios" class="mt-3"></div>
+
+          <hr class="section-divider">
+
           <div class="mb-1 d-flex align-items-center">
             <i class="fas fa-toolbox me-2 text-secondary"></i>
             <h5 class="mb-0 fw-bold">Preparativos</h5>
@@ -426,6 +436,24 @@
       </div>
     </div>
   </div>
+
+  <div class="modal fade" id="modalComentario" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content text-dark">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-comment-dots me-2"></i> Comentário</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <textarea id="comentarioTexto" class="form-control" rows="5" placeholder="Digite seu comentário..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-outline-success" onclick="salvarComentario()">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>  
 
   <footer class="text-center mt-1 text-white" style="font-size: 0.9rem;">
     Desenvolvido por <strong>Lindomar Lima - ACT</strong>
