@@ -498,7 +498,13 @@ function renderizarPassos() {
     const incluirFluxograma = document.getElementById("incluirFluxograma")?.checked;
 
     if (incluirFluxograma && nomeTarefa) {
-      flowText += `> Diagrama do teste [visualizar](ARQUIVO.svg)\n`;
+      abrirVisualizacaoFluxo(false);
+      const diagramaMermaid = document.getElementById("fluxoMermaid")?.innerText?.trim() || '';
+      
+      if (diagramaMermaid) {
+        const krokiUrl = abrirNoKroki();
+        flowText += `> Diagrama do teste [visualizar](${krokiUrl})\n`;
+      }
     }
 
 markdown += `
@@ -733,6 +739,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (salvarPreferenciaFluxograma !== null) {
       document.getElementById("incluirFluxograma").checked = salvarPreferenciaFluxograma === "true";
     }
+
+    document.getElementById('impacto').addEventListener('input', function (e) {
+      aplicarSubstituicoesSeta(e.target);
+    });
 
     const linksSalvos = localStorage.getItem('linksExternos');
     if (linksSalvos) {
@@ -1519,7 +1529,7 @@ function removerLink(index) {
   renderizarLinksExternos();
 }
 
-function abrirVisualizacaoFluxo() {
+function abrirVisualizacaoFluxo(show = true) {
   let diagrama = 'flowchart LR\n';
   diagrama += `A[Tarefa: ${nomeTarefa || 'Sem nome'}]:::etapa\n`;
   diagrama += `A --> PX[Passos de Teste]:::etapa\n`;
@@ -1618,7 +1628,9 @@ function abrirVisualizacaoFluxo() {
 
   window.ultimoMermaidCode = diagrama;
 
-  modal.show();
+  if (show) {
+    modal.show();
+  }
 }
 
 function sanitizarTextoMermaid(texto) {
@@ -1647,8 +1659,7 @@ function abrirNoKroki() {
   const encoded = btoa(String.fromCharCode(...compressed))
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-  const url = `https://kroki.io/mermaid/svg/${encoded}`;
-  window.open(url, '_blank');
+  return `https://kroki.io/mermaid/svg/${encoded}`;
 }
 
 document.getElementById("incluirFluxograma").addEventListener("change", function () {
@@ -1691,14 +1702,16 @@ function salvarComentario() {
 
 function renderizarComentariosPreview() {
   const container = document.getElementById("previewComentarios");
+  const tituloWrapper = document.getElementById("comentarioTituloWrapper");
+
   container.innerHTML = '';
 
-  if (comentariosAtencao.length === 0) return;
+  if (comentariosAtencao.length === 0) {
+    tituloWrapper.style.display = 'none';
+    return;
+  }
 
-  const titulo = document.createElement('h5');
-  titulo.className = 'fw-bold preview-coment-title';
-  titulo.innerHTML = `<i class="fas fa-exclamation-circle text-secondary"></i> Pontos de Atenção`;
-  container.appendChild(titulo);
+  tituloWrapper.style.display = 'block';
 
   comentariosAtencao.forEach((coment, i) => {
     const div = document.createElement('div');
@@ -1706,7 +1719,7 @@ function renderizarComentariosPreview() {
   
     div.innerHTML = `
       <div><i class="fas fa-exclamation-triangle me-2"></i>${coment}</div>
-      <div class="ms-3">
+      <div class="ms-3 d-flex gap-1">
         <button class="btn btn-sm btn-secondary-light" title="Editar" onclick="abrirModalComentarios(${i})">
           <i class="fas fa-edit"></i>
         </button>
@@ -1718,7 +1731,6 @@ function renderizarComentariosPreview() {
   
     container.appendChild(div);
   });
-  
 }
 
 function removerComentario(index) {
