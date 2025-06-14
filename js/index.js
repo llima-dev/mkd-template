@@ -376,21 +376,59 @@ function renderizarPassos() {
         renderizarCriterios();
     }
 
+    function editarCriterio(index, spanElement) {
+      const textoOriginal = criterios[index];
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = textoOriginal;
+      input.className = 'form-control form-control-sm';
+      input.style.flex = '1';
+    
+      input.onblur = function () {
+        salvarEdicao();
+      };
+    
+      input.onkeypress = function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          salvarEdicao();
+        }
+      };
+    
+      function salvarEdicao() {
+        const novoValor = input.value.trim();
+        if (novoValor) {
+          criterios[index] = novoValor;
+          renderizarCriterios();
+        }
+      }
+    
+      spanElement.replaceWith(input);
+      input.focus();
+    }    
+
     function renderizarCriterios() {
-    const lista = document.getElementById('listaCriterios');
-    lista.innerHTML = '';
-    criterios.forEach((criterio, index) => {
+      const lista = document.getElementById('listaCriterios');
+      lista.innerHTML = '';
+    
+      criterios.forEach((criterio, index) => {
         const li = document.createElement('li');
         li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    
         li.innerHTML = `
-        <span>${escaparUnderscores((index + 1) + '. ' + criterio)}</span>
-        <button class="btn btn-sm btn-outline-danger btn-delete-prep" onclick="removerCriterio(${index})">
+          <div class="flex-grow-1 d-flex align-items-center gap-2">
+            <span class="editable flex-grow-1" onclick="editarCriterio(${index}, this)">
+              ${escaparUnderscores(`${index + 1}. ${criterio}`)}
+            </span>
+          </div>
+          <button class="btn btn-sm btn-outline-danger btn-delete-prep" onclick="removerCriterio(${index})">
             <i class="fas fa-trash"></i>
-        </button>
+          </button>
         `;
+    
         lista.appendChild(li);
-    });
-    }
+      });
+    }    
 
     // Enter para adicionar critério
     document.getElementById('novoCriterio').addEventListener('keypress', function (e) {
